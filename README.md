@@ -42,7 +42,7 @@ type StringService interface {
 Then, within that directory, and from terminal just run the command ```go generate```,
 and the layers will automatically be generated.
 
-### Exaplanation
+### Explanation
 What's happening is go-kit-middlewarer is looking for an interface with the name
 specified by the type flag.  It uses this information to pre-generate Service
 Middlewares, and transport bindings automatically so you don't have to worry
