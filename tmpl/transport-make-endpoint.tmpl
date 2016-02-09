@@ -21,6 +21,11 @@ func make{{.MethodName}}Endpoint({{.InterfaceNameLcase}} {{.BasePackageName}}.{{
 		var resp {{.MethodNameLcase}}Response
 		resp.embedMime = new(embedMime)
 
+		{{if .Params}}
+		{{range .Params}}
+		{{.Name}} := req.{{.PublicName}}
+		{{end}}{{end}}
+
 		{{if .Results}}
 		{{.MethodResultNamesStr}} := {{.InterfaceNameLcase}}.{{.MethodName}}({{.MethodArgumentNamesStr}})
 		{{range .Results}}resp.{{.PublicName}} = {{.Name}}

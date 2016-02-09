@@ -54,7 +54,7 @@ func formatBuffer(buf bytes.Buffer, filename string) []byte {
 
 func openFile(dirname, filename string) *os.File {
 	_, err := os.Stat(dirname)
-	err = os.Mkdir(dirname, 0744)
+	err = os.MkdirAll(dirname, 0744)
 	if err != nil && !os.IsExist(err) {
 		log.Fatalf("Unable to Make Directory: %s: %s", dirname, err)
 	}

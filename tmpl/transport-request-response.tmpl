@@ -6,8 +6,6 @@
 package transport
 
 import (
-	// "bytes"
-	// "io/ioutil"
 	"net/http"
 
 	"github.com/ayiga/go-kit-middlewarer/encoding"
@@ -18,8 +16,7 @@ import (
 	"{{.BasePackage}}"
 )
 
-// var decoder microsvc.GenerateDecoder = microsvc.JSONGenerateDecoder
-// var encoder microsvc.GenerateEncoder = microsvc.JSONGenerateEncoder
+var _ {{.BasePackageName}}.{{.InterfaceName}}
 
 type embedMime struct {
 	mime string
@@ -41,13 +38,15 @@ func (em *embedMime) SetMime( mime string ) {
 // {{.MethodNameLcase}}Request defines a Request structure for the Method {{.BasePackage}}.{{.InterfaceName}}.{{.MethodName}}
 type {{.MethodNameLcase}}Request struct {
 	*embedMime
-	{{range .Params}}{{template "param" .}}{{end}}
+	{{range .Params}}{{template "param" .}}
+	{{end}}
 }
 
 // {{.MethodNameLcase}}Response defines a Response structure for the Method {{.BasePackage}}.{{.InterfaceName}}.{{.MethodName}}
 type {{.MethodNameLcase}}Response struct {
 	*embedMime
-	{{range .Results}}{{template "param" .}}{{end}}
+	{{range .Results}}{{template "param" .}}
+	{{end}}
 }
 
 // decode{{.MethodName}}Request creates a decoder for {{.BasePackage}}.{{.InterfaceName}}.{{.MethodName}}
@@ -55,8 +54,6 @@ func decode{{.MethodName}}Request(r *http.Request) (interface{}, error) {
 	req := new({{.MethodNameLcase}}Request)
 	req.embedMime = new(embedMime)
 	return encoding.Default().DecodeRequest(req)(r)
-
-	// return microsvc.MakeRequestDecoder(new({{.MethodNameLcase}}Request), decoder)(r)
 }
 
 // decode{{.MethodName}}Response creates a decoder for {{.BasePackage}}.{{.InterfaceName}}.{{.MethodName}}
@@ -64,23 +61,16 @@ func decode{{.MethodName}}Response(r *http.Response) (interface{}, error) {
 	req := new({{.MethodNameLcase}}Response)
 	req.embedMime = new(embedMime)
 	return encoding.Default().DecodeResponse(req)(r)
-	// return microsvc.MakeResponseDecoder(new({{.MethodNameLcase}}Response), decoder)(r)
 }
 
 // encode{{.MethodName}}Request creates an encoder for {{.BasePackage}}.{{.InterfaceName}}.{{.MethodName}}
 func encode{{.MethodName}}Request (r *http.Request, request interface{}) error {
 	return encoding.Default().EncodeRequest()(r,request)
-
-	// var buf bytes.Buffer
-	// err := encoder(&buf).Encode(request)
-	// r.Body = ioutil.NopCloser(&buf)
-	// return err
 }
 
 // encode{{.MethodName}}Response creates an encoder for {{.BasePackage}}.{{.InterfaceName}}.{{.MethodName}}
 func encode{{.MethodName}}Response (w http.ResponseWriter, response interface{}) error {
 	return encoding.Default().EncodeResponse()(w,response)
-	// return encoder(w).Encode(response)
 }
 
 {{end}}
