@@ -145,7 +145,7 @@ func (def) DecodeRequest(request interface{}) httptransport.DecodeRequestFunc {
 					// pass it on
 					if len(accept.mime) > 0 {
 						mime := accept.highest()
-						if mime == "*/*" {
+						if _, err := Get(mime); err != nil {
 							em.SetMime(ct.contentType)
 						} else {
 							em.SetMime(mime)
