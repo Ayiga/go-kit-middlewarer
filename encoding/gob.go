@@ -8,7 +8,8 @@ import (
 )
 
 func init() {
-	Register("binary/gob", Gob(0))
+	Register("application/gob", Gob(0))
+	Register("application/octet-stream+gob", Gob(0))
 }
 
 // GobGenerateDecoder returns a GOB Decoder
