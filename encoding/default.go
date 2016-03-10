@@ -145,10 +145,13 @@ func (def) DecodeRequest(request interface{}) httptransport.DecodeRequestFunc {
 					// pass it on
 					if len(accept.mime) > 0 {
 						mime := accept.highest()
-						em.SetMime(mime)
+						if mime == "*/*" {
+							em.SetMime(ct.contentType)
+						} else {
+							em.SetMime(mime)
+						}
 					} else {
-						mime := ct.contentType
-						em.SetMime(mime)
+						em.SetMime(ct.contentType)
 					}
 				}
 
