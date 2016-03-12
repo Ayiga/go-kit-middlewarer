@@ -176,6 +176,7 @@ type Package struct {
 type Interface struct {
 	name    string // the name of the constant.
 	methods []Method
+	types   []Param
 }
 
 func createInterface(name string, iface *ast.InterfaceType, reservedNames []string, file File) Interface {
@@ -185,6 +186,7 @@ func createInterface(name string, iface *ast.InterfaceType, reservedNames []stri
 	interf := Interface{
 		name:    name,
 		methods: make([]Method, 0, iface.Methods.NumFields()),
+		types:   nil,
 	}
 	for _, f := range iface.Methods.List {
 		if len(f.Names) > 0 {
@@ -192,7 +194,22 @@ func createInterface(name string, iface *ast.InterfaceType, reservedNames []stri
 			interf.methods = append(interf.methods, createMethod(f, names, file))
 		} else {
 			// this is an interface.
-			fmt.Printf("%s\n", f.Type)
+			var suggestedName = ""
+
+			n := resolveFieldTypes(f.Type)
+			potentialNamePieces := strings.Split(n, ".")
+			if len(potentialNamePieces) > 0 {
+				suggestedName = strings.ToLower(potentialNamePieces[len(potentialNamePieces)-1])
+			}
+
+			p := createParam(f, reservedNames, suggestedName, file)
+
+			if len(p.names) > 0 {
+				reservedNames = append(reservedNames, p.names[0])
+				// add it to the reserved name
+			}
+
+			interf.types = append(interf.types, p)
 		}
 	}
 	return interf
@@ -496,7 +513,8 @@ type ifaceArgs struct {
 func (f *File) genImportsAndTypes(node ast.Node) bool {
 	imports, ok := node.(*ast.ImportSpec)
 	if ok {
-		f.imports = append(f.imports, createImport(imports))
+		imp := createImport(imports)
+		f.imports = append(f.imports, imp)
 	}
 
 	decl, ok := node.(*ast.TypeSpec)

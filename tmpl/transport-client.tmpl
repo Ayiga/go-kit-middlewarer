@@ -7,6 +7,9 @@ package transport
 import (
 	"time"
 
+	{{range .ExtraImports}}
+	{{.}}{{end}}
+
 	"golang.org/x/net/context"
 
 	"github.com/go-kit/kit/endpoint"
@@ -28,6 +31,8 @@ type {{.InterfaceName}} interface {
 }
 
 type client{{.InterfaceName}} struct {
+	{{range .ExtraInterfaces}}{{.Type}}
+	{{end}}
 	{{range .Methods}}{{.MethodNameLcase}}Endpoint endpoint.Endpoint
 	{{end}}
 }
@@ -53,9 +58,13 @@ func ({{.LocalName}} client{{.InterfaceName}}) {{.MethodName}}({{.MethodArgument
 		return
 	}
 
+	{{if .Results}}
 	resp := response.(*{{.MethodNameLcase}}Response)
 
 	{{range .Results}}{{.Name}} = resp.{{.PublicName}}
+	{{end}}
+	{{else}}
+	_ = response.(*{{.MethodNameLcase}}Response)
 	{{end}}
 
 	return

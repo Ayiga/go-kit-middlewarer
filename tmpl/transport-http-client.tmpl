@@ -9,6 +9,9 @@ import (
 	"strings"
 	"net/url"
 
+	{{range .ExtraImports}}
+	{{.}}{{end}}
+
 	kitendpoint "github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
 	kitloadbalancer "github.com/go-kit/kit/loadbalancer"
@@ -71,13 +74,15 @@ func mapHTTPClientLayersToClientOptions( clientLayers []HTTPClientLayer, addr, p
 // the given address provided by the addr string.  This function takes a series
 // of HTTPClientLayer(s) that will be applied to the client before the
 // subsequent method call.
-func NewHTTPClient( addr string, wrappers ...HTTPClientLayer ) {{.BasePackageName}}.{{.InterfaceName}} {
+func NewHTTPClient( addr string, {{range .ExtraInterfaces}}{{.Name}} {{.Type}}, {{end}}wrappers ...HTTPClientLayer ) {{.BasePackageName}}.{{.InterfaceName}} {
 	var (
 		{{range .Methods}}
 		{{.MethodNameLcase}}Endpoint, _, _ = httpFactory( {{.EndpointPackageName}}.Path{{.MethodName}}, encode{{.MethodName}}Request, decode{{.MethodName}}Response, mapHTTPClientLayersToClientOptions( wrappers, addr, {{.EndpointPackageName}}.Path{{.MethodName}})... )(addr){{end}}
 	)
 
 	return &client{{.InterfaceName}} {
+		{{range .ExtraInterfaces}}{{.PublicName}}: {{.Name}},
+		{{end}}
 		{{range .Methods}}
 		{{.MethodNameLcase}}Endpoint: {{.MethodNameLcase}}Endpoint,{{end}}
 	}

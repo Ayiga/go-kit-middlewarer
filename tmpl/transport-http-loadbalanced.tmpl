@@ -7,6 +7,9 @@ package transport
 import (
 	"golang.org/x/net/context"
 
+	{{range .ExtraImports}}
+	{{.}}{{end}}
+
 	kitloadbalancer "github.com/go-kit/kit/loadbalancer"
 	kitendpoint "github.com/go-kit/kit/endpoint"
 
@@ -35,8 +38,10 @@ type GetLoadBalancerFunc func( kitloadbalancer.Factory ) kitloadbalancer.LoadBal
 
 // NewHTTPLoadBalancedClient is a function that will return a Load balanced
 // client based on the load balancing conversion function provided.
-func NewHTTPLoadBalancedClient( get GetLoadBalancerFunc, wrappers ...kitendpoint.Middleware ) {{.BasePackageName}}.{{.InterfaceName}} {
+func NewHTTPLoadBalancedClient( get GetLoadBalancerFunc, {{range .ExtraInterfaces}}{{.Name}} {{.Type}}, {{end}}wrappers ...kitendpoint.Middleware ) {{.BasePackageName}}.{{.InterfaceName}} {
 	return &client{{.InterfaceName}} {
+		{{range .ExtraInterfaces}}{{.PublicName}}: {{.Name}},
+		{{end}}
 		{{range .Methods}}{{.MethodNameLcase}}Endpoint: endpointFromLoadBalancer(get( httpFactory({{.EndpointPackageName}}.Path{{.MethodName}}, encode{{.MethodName}}Request, decode{{.MethodName}}Response, wrappers...))),
 		{{end}}
 	}
