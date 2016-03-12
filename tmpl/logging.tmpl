@@ -49,7 +49,10 @@ func ({{.LocalName}} logging{{.InterfaceName}}) {{.MethodName}}({{.MethodArgumen
 		)
 	}(time.Now())
 
-	{{.MethodResultNamesStr}} = {{.LocalName}}.{{.InterfaceName}}.{{.MethodName}}({{.MethodArgumentNamesStr}})
+
+	{{if .MethodResults}}
+	{{.MethodResultNamesStr}} = {{.LocalName}}.{{.InterfaceName}}.{{.MethodName}}({{.MethodArgumentNamesStr}}){{else}}
+	{{.LocalName}}.{{.InterfaceName}}.{{.MethodName}}({{.MethodArgumentNamesStr}}){{end}}
 	return
 }{{end}}
 {{define "logit"}}"{{.}}", {{.}},
