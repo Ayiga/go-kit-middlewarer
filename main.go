@@ -221,14 +221,18 @@ func createMethod(field *ast.Field, reservedNames []string, file File) Method {
 		results: make([]Param, 0, fun.Results.NumFields()),
 	}
 
-	for _, f := range fun.Params.List {
-		m.params = append(m.params, createParam(f, names, "input", file))
-		names = append(names, m.params[len(m.params)-1].names...)
+	if fun.Params != nil {
+		for _, f := range fun.Params.List {
+			m.params = append(m.params, createParam(f, names, "input", file))
+			names = append(names, m.params[len(m.params)-1].names...)
+		}
 	}
 
-	for _, f := range fun.Results.List {
-		m.results = append(m.results, createParam(f, names, "output", file))
-		names = append(names, m.results[len(m.results)-1].names...)
+	if fun.Results != nil {
+		for _, f := range fun.Results.List {
+			m.results = append(m.results, createParam(f, names, "output", file))
+			names = append(names, m.results[len(m.results)-1].names...)
+		}
 	}
 
 	return m
@@ -543,10 +547,16 @@ func resolveFieldNames(t *ast.Field) string {
 
 func resolveFieldTypes(t ast.Expr) string {
 	switch t1 := t.(type) {
+	case *ast.InterfaceType:
+		return "interface{}"
 	case *ast.SelectorExpr:
 		return fmt.Sprintf("%s.%s", t1.X, resolveFieldTypes(t1.Sel))
+	case *ast.StarExpr:
+		return fmt.Sprintf("*%s", resolveFieldTypes(t1.X))
 	case *ast.Ident:
 		return fmt.Sprintf("%s", t1)
+	case *ast.MapType:
+		return fmt.Sprintf("map[%s]%s", resolveFieldTypes(t1.Key), resolveFieldTypes(t1.Value))
 	case *ast.ArrayType:
 		l := ""
 		if t1.Len != nil {
