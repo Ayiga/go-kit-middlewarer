@@ -95,10 +95,10 @@ func (f *File) genImportsAndTypes(node ast.Node) bool {
 			f.pkg.variables = append(f.pkg.variables, v)
 			f.variables = append(f.variables, v)
 		}
-
+		return false
+	case *ast.FuncDecl, nil, *ast.Ident, *ast.CommentGroup, *ast.Comment:
 		return false
 	case *ast.File: // weird
-	case nil:
 	default:
 		log.Printf("Node Type: %#v\n", t)
 	}

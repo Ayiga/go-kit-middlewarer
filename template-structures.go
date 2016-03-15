@@ -131,9 +131,9 @@ type TemplateBase struct {
 	ExtraInterfaces    []TemplateParam
 }
 
-func createTemplateBase(basePackage, endpointPackage Import, i Interface, imps []Import) TemplateBase {
-	extraImps := filteredExtraImports(i, imps)
-	imps = filteredImports(i, imps)
+func createTemplateBase(basePackage, endpointPackage Import, i Interface, oimps []Import) TemplateBase {
+	imps := filteredImports(i, oimps)
+	extraImps := filteredExtraImports(i, oimps)
 
 	names := make([]string, 0, len(imps))
 	for _, i := range imps {
@@ -155,26 +155,20 @@ func createTemplateBase(basePackage, endpointPackage Import, i Interface, imps [
 	}
 
 	var extraInterfaces []TemplateParam
-	// for _, i := range i.types {
-	// 	var firstName = ""
-	// 	if len(i.names) < 1 {
-	// 		panic("No names computed for this interface... that's not good")
-	// 	}
-	// 	firstName = i.names[0]
+	for _, t := range i.types {
+		var publicNamePieces = strings.Split(t.String(), ".")
+		if len(publicNamePieces) < 1 {
+			panic("This type is empty?!")
+		}
 
-	// 	var publicNamePieces = strings.Split(i.typ, ".")
-	// 	if len(publicNamePieces) < 1 {
-	// 		panic("This type is empty?!")
-	// 	}
+		var publicName = publicNamePieces[len(publicNamePieces)-1]
 
-	// 	var publicName = publicNamePieces[len(publicNamePieces)-1]
-
-	// 	extraInterfaces = append(extraInterfaces, TemplateParam{
-	// 		PublicName: publicName,
-	// 		Name:       firstName,
-	// 		Type:       i.typ,
-	// 	})
-	// }
+		extraInterfaces = append(extraInterfaces, TemplateParam{
+			PublicName: publicName,
+			Name:       publicName,
+			Type:       t.String(),
+		})
+	}
 
 	return TemplateBase{
 		TemplateCommon: TemplateCommon{
@@ -232,6 +226,15 @@ func filteredImports(i Interface, imps []Import) []Import {
 						res = append(res, imp)
 						tmp = append(tmp, imp.ImportSpec())
 					}
+				}
+			}
+		}
+
+		for _, t := range i.types {
+			if strings.HasPrefix(t.String(), fmt.Sprintf("%s.", imp.name)) {
+				if !sliceContains(tmp, imp.ImportSpec()) {
+					res = append(res, imp)
+					tmp = append(tmp, imp.ImportSpec())
 				}
 			}
 		}

@@ -7,9 +7,6 @@ package transport
 import (
 	"time"
 
-	{{range .ExtraImports}}
-	{{.}}{{end}}
-
 	"golang.org/x/net/context"
 
 	"github.com/go-kit/kit/endpoint"
@@ -20,15 +17,8 @@ import (
 	"{{.BasePackage}}"
 )
 
-// {{.InterfaceName}} redeclaring the {{.InterfaceName}} here to forward it from the base package.
-// this serves two purposes. It helps us reference it at this package level a
-// little bit more easily, and it ensures that we are using the base package,
-// {{.BasePackage}} that we imported here.
-// We must import {{.BasePackage}}, as there may be types defined within it that
-// the service uses.
-type {{.InterfaceName}} interface {
-	{{.BasePackageName}}.{{.InterfaceName}}
-}
+var _ {{.BasePackageName}}.{{.InterfaceName}}
+
 
 type client{{.InterfaceName}} struct {
 	{{range .ExtraInterfaces}}{{.Type}}
