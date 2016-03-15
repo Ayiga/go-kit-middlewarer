@@ -3,8 +3,8 @@ package main
 import (
 	"bytes"
 	"go/format"
-	"log"
 	"os"
+	"path/filepath"
 )
 
 func sliceContains(slice []string, entry string) bool {
@@ -58,7 +58,7 @@ func openFile(dirname, filename string) *os.File {
 	if err != nil && !os.IsExist(err) {
 		log.Fatalf("Unable to Make Directory: %s: %s", dirname, err)
 	}
-	fname := dirname + "/" + filename
+	fname := filepath.Join(dirname, filename)
 
 	file, err := os.Create(fname)
 	if err != nil && os.IsExist(err) {

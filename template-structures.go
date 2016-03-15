@@ -23,7 +23,7 @@ type TemplateParam struct {
 
 func createTemplateParam(p Param) TemplateParam {
 	return TemplateParam{
-		Type: p.typ,
+		Type: p.typ.String(),
 	}
 }
 
@@ -78,7 +78,7 @@ func createTemplateMethods(basePackage, endpointPackage Import, interf Interface
 				params = append(params, TemplateParam{
 					PublicName: publicVariableName(n),
 					Name:       n,
-					Type:       p.typ,
+					Type:       p.typ.String(),
 				})
 			}
 		}
@@ -90,7 +90,7 @@ func createTemplateMethods(basePackage, endpointPackage Import, interf Interface
 				methodsResults = append(methodsResults, TemplateParam{
 					PublicName: publicVariableName(n),
 					Name:       n,
-					Type:       r.typ,
+					Type:       r.typ.String(),
 				})
 			}
 		}
@@ -155,26 +155,26 @@ func createTemplateBase(basePackage, endpointPackage Import, i Interface, imps [
 	}
 
 	var extraInterfaces []TemplateParam
-	for _, i := range i.types {
-		var firstName = ""
-		if len(i.names) < 1 {
-			panic("No names computed for this interface... that's not good")
-		}
-		firstName = i.names[0]
+	// for _, i := range i.types {
+	// 	var firstName = ""
+	// 	if len(i.names) < 1 {
+	// 		panic("No names computed for this interface... that's not good")
+	// 	}
+	// 	firstName = i.names[0]
 
-		var publicNamePieces = strings.Split(i.typ, ".")
-		if len(publicNamePieces) < 1 {
-			panic("This type is empty?!")
-		}
+	// 	var publicNamePieces = strings.Split(i.typ, ".")
+	// 	if len(publicNamePieces) < 1 {
+	// 		panic("This type is empty?!")
+	// 	}
 
-		var publicName = publicNamePieces[len(publicNamePieces)-1]
+	// 	var publicName = publicNamePieces[len(publicNamePieces)-1]
 
-		extraInterfaces = append(extraInterfaces, TemplateParam{
-			PublicName: publicName,
-			Name:       firstName,
-			Type:       i.typ,
-		})
-	}
+	// 	extraInterfaces = append(extraInterfaces, TemplateParam{
+	// 		PublicName: publicName,
+	// 		Name:       firstName,
+	// 		Type:       i.typ,
+	// 	})
+	// }
 
 	return TemplateBase{
 		TemplateCommon: TemplateCommon{
@@ -199,7 +199,7 @@ func filteredExtraImports(i Interface, imps []Import) []Import {
 	var tmp []string
 	for _, imp := range imps {
 		for _, t := range i.types {
-			if strings.HasPrefix(t.typ, fmt.Sprintf("%s.", imp.name)) {
+			if strings.HasPrefix(t.String(), fmt.Sprintf("%s.", imp.name)) {
 				if !sliceContains(tmp, imp.ImportSpec()) {
 					res = append(res, imp)
 					tmp = append(tmp, imp.ImportSpec())
@@ -216,8 +216,8 @@ func filteredImports(i Interface, imps []Import) []Import {
 	for _, imp := range imps {
 		for _, meth := range i.methods {
 			for _, param := range meth.params {
-				if strings.HasPrefix(param.typ, fmt.Sprintf("%s.", imp.name)) ||
-					strings.HasPrefix(param.typ, fmt.Sprintf("*%s.", imp.name)) {
+				if strings.HasPrefix(param.typ.String(), fmt.Sprintf("%s.", imp.name)) ||
+					strings.HasPrefix(param.typ.String(), fmt.Sprintf("*%s.", imp.name)) {
 					if !sliceContains(tmp, imp.ImportSpec()) {
 						res = append(res, imp)
 						tmp = append(tmp, imp.ImportSpec())
@@ -226,8 +226,8 @@ func filteredImports(i Interface, imps []Import) []Import {
 			}
 
 			for _, result := range meth.results {
-				if strings.HasPrefix(result.typ, fmt.Sprintf("%s.", imp.name)) ||
-					strings.HasPrefix(result.typ, fmt.Sprintf("*%s.", imp.name)) {
+				if strings.HasPrefix(result.typ.String(), fmt.Sprintf("%s.", imp.name)) ||
+					strings.HasPrefix(result.typ.String(), fmt.Sprintf("*%s.", imp.name)) {
 					if !sliceContains(tmp, imp.ImportSpec()) {
 						res = append(res, imp)
 						tmp = append(tmp, imp.ImportSpec())

@@ -3,8 +3,9 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"os"
+	"path"
+	"path/filepath"
 	"text/template"
 )
 
@@ -19,15 +20,17 @@ func processLogging(g *Generator, f *File) {
 	}
 
 	files := []string{
-		gopath + "/src/github.com/ayiga/go-kit-middlewarer/tmpl/logging.tmpl",
+		filepath.Join(gopath, "src", "github.com", "ayiga", "go-kit-middlewarer", "tmpl", "logging.tmpl"),
 	}
 	tmpl, err := extra.ParseFiles(files...)
 	if err != nil {
 		log.Fatalf("Template Parse Error: %s", err)
 	}
 
-	endpointPackage := createImportWithPath(f.pkg.dir + "/endpoint")
-	basePackage := createImportWithPath(f.pkg.dir)
+	convertedPath := filepath.ToSlash(f.pkg.dir)
+
+	endpointPackage := createImportWithPath(path.Join(convertedPath, "endpoint"))
+	basePackage := createImportWithPath(convertedPath)
 
 	for _, interf := range f.interfaces {
 		err := tmpl.ExecuteTemplate(&buf, "logging.tmpl", createTemplateBase(basePackage, endpointPackage, interf, f.imports))
@@ -38,7 +41,7 @@ func processLogging(g *Generator, f *File) {
 
 	filename := "middleware_gen.go"
 
-	file := openFile("./logging", filename)
+	file := openFile(filepath.Join(".", "logging"), filename)
 	defer file.Close()
 
 	fmt.Fprint(file, string(formatBuffer(buf, filename)))
