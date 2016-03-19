@@ -78,7 +78,7 @@ func Get(mime string) (RequestResponseEncoding, error) {
 	}
 
 	if mimeToEncodings[mime] == nil {
-		return nil, ErrNoRegistrationsExist
+		return nil, ErrMimeNotFound
 	}
 
 	return mimeToEncodings[mime], nil
