@@ -1,6 +1,8 @@
 package encoding
 
 import (
+	"io"
+
 	httptransport "github.com/go-kit/kit/transport/http"
 )
 
@@ -18,22 +20,29 @@ const (
 	// ErrNoRegistrationsExist represents that nothing has been registered with
 	// this Encoder / Decoder
 	ErrNoRegistrationsExist
+	// ErrMimeNotSpecified rerpesents that no information has been specified
+	// in order to determine the Mime-type
+	ErrMimeNotSpecified
+	// ErrUnableToDetermineMime represents an error that indicates that
+	// the attempt to automatically detect the mime type has failed.
+	ErrUnableToDetermineMime
+	// ErrNotImplemented represents that the functionality of this method is
+	// not implemented.
+	ErrNotImplemented
 )
+
+var errToString = map[Err]string{
+	ErrAlreadyRegistered:     "That mime type already has already been registered",
+	ErrMimeNotFound:          "That mime type does not have an associated Encoder/Decoder",
+	ErrNoRegistrationsExist:  "Nothing has been registered, nothing to use for encoding/decoding",
+	ErrMimeNotSpecified:      "No information was given to help determine the mime type",
+	ErrUnableToDetermineMime: "Fall back to automatically detect the mime type has failed",
+	ErrNotImplemented:        "This method is not implemented",
+}
 
 // Error implements the error interface
 func (e Err) Error() string {
-	switch e {
-	case ErrAlreadyRegistered:
-		return "That mime type already has already been registered"
-	case ErrMimeNotFound:
-		return "That mime type does not have an associated Encoder/Decoder"
-	case ErrNoRegistrationsExist:
-		return "Nothing has been registered, nothing to use for encoding/decoding"
-	case ErrUnknown:
-		fallthrough
-	default:
-		return ""
-	}
+	return errToString[e]
 }
 
 // RequestResponseEncoding represents a type that can be used to automatically
@@ -56,15 +65,25 @@ type RequestResponseEncoding interface {
 	// provided with an underlying type, can be used to decode a response with
 	// the encoding type represented by this type.
 	DecodeResponse(response interface{}) httptransport.DecodeResponseFunc
+
+	// encoder will return an underlying encoder for the RequestResponseEncoding
+	encoder(w io.Writer) Encoder
+
+	// decoder will return an underlying encoder for the RequestResponseEncoding
+	decoder(r io.Reader) Decoder
 }
 
 var mimeToEncodings = map[string]RequestResponseEncoding{}
+var mimeToFirstRunes = map[string][]rune{}
 
 // Register will register the associated encoding with the given mime type
-func Register(mime string, encoding RequestResponseEncoding) error {
-
+func Register(mime string, encoding RequestResponseEncoding, startHint []rune) error {
 	if mimeToEncodings[mime] != nil {
 		return ErrAlreadyRegistered
+	}
+
+	if startHint != nil {
+		mimeToFirstRunes[mime] = startHint
 	}
 
 	mimeToEncodings[mime] = encoding

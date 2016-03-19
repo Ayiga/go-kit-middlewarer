@@ -8,8 +8,9 @@ import (
 )
 
 func init() {
-	Register("text/json", JSON(0))
-	Register("application/json", JSON(0))
+	arr := []rune{'{', '['}
+	Register("text/json", JSON(0), arr)
+	Register("application/json", JSON(0), arr)
 }
 
 // JSONGenerateDecoder returns a JSON Decoder
@@ -43,4 +44,14 @@ func (JSON) EncodeResponse() httptransport.EncodeResponseFunc {
 // DecodeResponse implements RequestResponseEncoding
 func (JSON) DecodeResponse(response interface{}) httptransport.DecodeResponseFunc {
 	return MakeResponseDecoder(response, JSONGenerateDecoder)
+}
+
+// encoder implements RequestResponseEncoding
+func (JSON) encoder(w io.Writer) Encoder {
+	return JSONGenerateEncoder(w)
+}
+
+// decoder implements RequestResponseEncoding
+func (JSON) decoder(r io.Reader) Decoder {
+	return JSONGenerateDecoder(r)
 }

@@ -8,8 +8,9 @@ import (
 )
 
 func init() {
-	Register("application/gob", Gob(0))
-	Register("application/octet-stream+gob", Gob(0))
+	arr := []rune{0x31}
+	Register("application/gob", Gob(0), arr)
+	Register("application/octet-stream+gob", Gob(0), arr)
 }
 
 // GobGenerateDecoder returns a GOB Decoder
@@ -43,4 +44,14 @@ func (Gob) EncodeResponse() httptransport.EncodeResponseFunc {
 // DecodeResponse implements RequestResponseEncoding
 func (Gob) DecodeResponse(response interface{}) httptransport.DecodeResponseFunc {
 	return MakeResponseDecoder(response, GobGenerateDecoder)
+}
+
+// encoder implements RequestResponseEncoding
+func (Gob) encoder(w io.Writer) Encoder {
+	return GobGenerateEncoder(w)
+}
+
+// decoder implements RequestResponseEncoding
+func (Gob) decoder(r io.Reader) Decoder {
+	return GobGenerateDecoder(r)
 }

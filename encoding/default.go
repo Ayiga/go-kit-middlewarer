@@ -1,6 +1,7 @@
 package encoding
 
 import (
+	"io"
 	"mime"
 	"net/http"
 	"strconv"
@@ -101,24 +102,56 @@ func parseContentType(contentType string) contentTypeValue {
 	}
 }
 
+func getFromEmbededMime(em EmbededMime) (mime string, encoding RequestResponseEncoding, err error) {
+	if mime = em.GetMime(); mime != "" {
+		encoding, err = Get(mime)
+		return
+	}
+
+	return "", nil, ErrMimeNotSpecified
+}
+
+func encodeRequest(mime string, encoding RequestResponseEncoding, r *http.Request, request interface{}) error {
+	r.Header.Set("Content-Type", mime)
+	r.Header.Set("Accept", mime)
+	return encoding.EncodeRequest()(r, request)
+}
+
+func encodeResponse(mime string, encoding RequestResponseEncoding, w http.ResponseWriter, response interface{}) error {
+	w.Header().Set("Content-Type", mime)
+	return encoding.EncodeResponse()(w, response)
+}
+
+func transferMimeDetails(em EmbededMime, ct contentTypeValue, accept acceptContentHeader) {
+	if len(accept.mime) > 0 {
+		acpt := accept.highest()
+		if _, err := Get(acpt); err == nil {
+			em.SetMime(acpt)
+			return
+		}
+	}
+
+	em.SetMime(ct.contentType)
+}
+
 // EncodeRequest implements RequestResponseEncoding
 func (def) EncodeRequest() httptransport.EncodeRequestFunc {
 	return func(r *http.Request, request interface{}) error {
 		if em, ok := request.(EmbededMime); ok {
-			if mime := em.GetMime(); mime != "" {
-				encoding, err := Get(mime)
-				if err != nil {
-					return err
-				}
-				r.Header.Set("Content-Type", mime)
-				r.Header.Set("Accept", mime)
-				return encoding.EncodeRequest()(r, request)
+			if mime, encoding, err := getFromEmbededMime(em); err == nil {
+				return encodeRequest(mime, encoding, r, request)
 			}
 		}
-		// pick one?
-		r.Header.Set("Content-Type", defaultEncoding)
-		r.Header.Set("Accept", defaultEncoding)
-		return JSON(0).EncodeRequest()(r, request)
+
+		// we failed, unfortunately.  However, we are making a request
+		// so we can just specify the default encoding
+		encoding, err := Get(defaultEncoding)
+		if err != nil {
+			// we have really big problems at this point
+			return err
+		}
+
+		return encodeRequest(defaultEncoding, encoding, r, request)
 	}
 }
 
@@ -127,38 +160,25 @@ func (def) DecodeRequest(request interface{}) httptransport.DecodeRequestFunc {
 	return func(r *http.Request) (interface{}, error) {
 		ct := parseContentType(r.Header.Get("Content-Type"))
 		accept := parseAccept(r.Header.Get("Accept"))
+
 		if ct.contentType == "" {
 			// fall back...
 			if em, ok := request.(EmbededMime); ok {
-				if mime := em.GetMime(); mime != "" {
-					encoding, err := Get(mime)
-					if err != nil {
-						return request, err
-					}
+				if _, encoding, err := getFromEmbededMime(em); err == nil {
 					return encoding.DecodeRequest(request)(r)
 				}
 			}
-		} else {
-			encoding, err := Get(ct.contentType)
-			if err == nil {
-				if em, ok := request.(EmbededMime); ok {
-					// pass it on
-					if len(accept.mime) > 0 {
-						mime := accept.highest()
-						if _, err := Get(mime); err != nil {
-							em.SetMime(ct.contentType)
-						} else {
-							em.SetMime(mime)
-						}
-					} else {
-						em.SetMime(ct.contentType)
-					}
-				}
-
-				return encoding.DecodeRequest(request)(r)
+		} else if encoding, err := Get(ct.contentType); err == nil {
+			if em, ok := request.(EmbededMime); ok {
+				transferMimeDetails(em, ct, accept)
 			}
-			return request, err
+
+			return encoding.DecodeRequest(request)(r)
 		}
+
+		// let's try to guess the type based on the request
+		return hintResolver(0).DecodeRequest(request)(r)
+
 		// Not sure what to do here... we'll error out since we have no idea...
 		return request, ErrMimeNotFound
 	}
@@ -168,19 +188,21 @@ func (def) DecodeRequest(request interface{}) httptransport.DecodeRequestFunc {
 func (def) EncodeResponse() httptransport.EncodeResponseFunc {
 	return func(w http.ResponseWriter, response interface{}) error {
 		if em, ok := response.(EmbededMime); ok {
-			if mime := em.GetMime(); mime != "" {
-				encoding, err := Get(mime)
-				if err != nil {
-					return err
-				}
-				w.Header().Set("Content-Type", mime)
-				return encoding.EncodeResponse()(w, response)
+			if mime, encoding, err := getFromEmbededMime(em); err == nil {
+				return encodeResponse(mime, encoding, w, response)
 			}
 		}
 
-		// pick one?
-		w.Header().Set("Content-Type", defaultEncoding)
-		return JSON(0).EncodeResponse()(w, response)
+		// we failed, but we'll try to use our default, so that we will
+		// at least make some forward progress
+
+		encoding, err := Get(defaultEncoding)
+		if err != nil {
+			return err
+
+		}
+
+		return encodeResponse(defaultEncoding, encoding, w, response)
 	}
 }
 
@@ -191,22 +213,28 @@ func (def) DecodeResponse(response interface{}) httptransport.DecodeResponseFunc
 		if ct == "" {
 			// fall back
 			if em, ok := response.(EmbededMime); ok {
-				if mime := em.GetMime(); mime != "" {
-					encoding, err := Get(mime)
-					if err != nil {
-						return response, err
-					}
+				if _, encoding, err := getFromEmbededMime(em); err == nil {
 					return encoding.DecodeResponse(response)(r)
 				}
 			}
-		} else {
-			encoding, err := Get(ct)
-			if err == nil {
-				return encoding.DecodeResponse(response)(r)
-			}
-			return response, err
+		} else if encoding, err := Get(ct); err == nil {
+			return encoding.DecodeResponse(response)(r)
 		}
+
+		// let's try to guess the type based on the response
+		return hintResolver(0).DecodeResponse(response)(r)
+
 		// Not sure what to do here... we'll error out since we have no idea...
 		return response, ErrMimeNotFound
 	}
+}
+
+// encoder does not implement RequestResponseEncoding
+func (def) encoder(w io.Writer) Encoder {
+	return nil
+}
+
+// decoder does not implement RequestResponseEncoding
+func (def) decoder(r io.Reader) Decoder {
+	return nil
 }

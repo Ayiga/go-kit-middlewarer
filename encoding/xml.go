@@ -8,8 +8,9 @@ import (
 )
 
 func init() {
-	Register("text/xml", XML(0))
-	Register("application/xml", XML(0))
+	arr := []rune{'<'}
+	Register("text/xml", XML(0), arr)
+	Register("application/xml", XML(0), arr)
 }
 
 // XMLGenerateDecoder returns an XML Decoder
@@ -43,4 +44,14 @@ func (XML) EncodeResponse() httptransport.EncodeResponseFunc {
 // DecodeResponse implements RequestResponseEncoding
 func (XML) DecodeResponse(response interface{}) httptransport.DecodeResponseFunc {
 	return MakeResponseDecoder(response, XMLGenerateDecoder)
+}
+
+// encoder implements RequestResponseEncoding
+func (XML) encoder(w io.Writer) Encoder {
+	return XMLGenerateEncoder(w)
+}
+
+// decoder implements RequestResponseEncoding
+func (XML) decoder(r io.Reader) Decoder {
+	return XMLGenerateDecoder(r)
 }
