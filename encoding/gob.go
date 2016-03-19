@@ -8,9 +8,8 @@ import (
 )
 
 func init() {
-	arr := []rune{0x31}
-	Register("application/gob", Gob(0), arr)
-	Register("application/octet-stream+gob", Gob(0), arr)
+	Register("application/gob", Gob(0), nil)
+	Register("application/octet-stream+gob", Gob(0), nil)
 }
 
 // GobGenerateDecoder returns a GOB Decoder

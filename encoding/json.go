@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	arr := []rune{'{', '['}
+	arr := []rune{'{', '[', '"', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
 	Register("text/json", JSON(0), arr)
 	Register("application/json", JSON(0), arr)
 }
