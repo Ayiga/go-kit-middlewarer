@@ -44,13 +44,3 @@ func (Gob) EncodeResponse() httptransport.EncodeResponseFunc {
 func (Gob) DecodeResponse(response interface{}) httptransport.DecodeResponseFunc {
 	return MakeResponseDecoder(response, GobGenerateDecoder)
 }
-
-// encoder implements RequestResponseEncoding
-func (Gob) encoder(w io.Writer) Encoder {
-	return GobGenerateEncoder(w)
-}
-
-// decoder implements RequestResponseEncoding
-func (Gob) decoder(r io.Reader) Decoder {
-	return GobGenerateDecoder(r)
-}

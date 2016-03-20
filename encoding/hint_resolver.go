@@ -58,7 +58,6 @@ func (hintResolver) DecodeRequest(request interface{}) httptransport.DecodeReque
 		rune1 := []rune(string(byts))[0]
 
 		var mimesToSkip = map[string]bool{}
-
 		for mime, hints := range mimeToFirstRunes {
 			for _, rune2 := range hints {
 				mimesToSkip[mime] = true
@@ -144,14 +143,14 @@ func (hintResolver) DecodeResponse(response interface{}) httptransport.DecodeRes
 					if err != nil {
 						// not found... this should be impossible
 						// but it's good to check it anyway.
-						continue
+						break
 					}
 
 					r.Body = ioutil.NopCloser(bytes.NewBuffer(byts))
 
 					if _, err = encoding.DecodeResponse(response)(r); err != nil {
 						// encoding failed... let's retry
-						continue
+						break
 					}
 					// we succeeded
 					return response, nil
@@ -185,14 +184,4 @@ func (hintResolver) DecodeResponse(response interface{}) httptransport.DecodeRes
 
 		return response, ErrUnableToDetermineMime
 	}
-}
-
-// encoder does not implement RequestResponseEncoding
-func (hintResolver) encoder(w io.Writer) Encoder {
-	return nil
-}
-
-// decoder does not implement RequestResponseEncoding
-func (hintResolver) decoder(r io.Reader) Decoder {
-	return nil
 }

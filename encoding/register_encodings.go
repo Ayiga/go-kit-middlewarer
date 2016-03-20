@@ -1,8 +1,6 @@
 package encoding
 
 import (
-	"io"
-
 	httptransport "github.com/go-kit/kit/transport/http"
 )
 
@@ -65,12 +63,6 @@ type RequestResponseEncoding interface {
 	// provided with an underlying type, can be used to decode a response with
 	// the encoding type represented by this type.
 	DecodeResponse(response interface{}) httptransport.DecodeResponseFunc
-
-	// encoder will return an underlying encoder for the RequestResponseEncoding
-	encoder(w io.Writer) Encoder
-
-	// decoder will return an underlying encoder for the RequestResponseEncoding
-	decoder(r io.Reader) Decoder
 }
 
 var mimeToEncodings = map[string]RequestResponseEncoding{}

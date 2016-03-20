@@ -45,13 +45,3 @@ func (JSON) EncodeResponse() httptransport.EncodeResponseFunc {
 func (JSON) DecodeResponse(response interface{}) httptransport.DecodeResponseFunc {
 	return MakeResponseDecoder(response, JSONGenerateDecoder)
 }
-
-// encoder implements RequestResponseEncoding
-func (JSON) encoder(w io.Writer) Encoder {
-	return JSONGenerateEncoder(w)
-}
-
-// decoder implements RequestResponseEncoding
-func (JSON) decoder(r io.Reader) Decoder {
-	return JSONGenerateDecoder(r)
-}

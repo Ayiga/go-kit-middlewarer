@@ -2,9 +2,7 @@ package encoding
 
 import (
 	"io"
-	"log"
 	"net/http"
-	"os"
 
 	httptransport "github.com/go-kit/kit/transport/http"
 )
@@ -36,12 +34,9 @@ func MakeRequestDecoder(request interface{}, gen GenerateDecoder) httptransport.
 // function that can decode a given Response.
 func MakeResponseDecoder(response interface{}, gen GenerateDecoder) httptransport.DecodeResponseFunc {
 	return func(r *http.Response) (interface{}, error) {
-		log.Printf("Response Receceived: \n")
-		reader := io.TeeReader(r.Body, os.Stdout)
-		if err := gen(reader).Decode(response); err != nil {
+		if err := gen(r.Body).Decode(response); err != nil {
 			return nil, err
 		}
-		log.Printf("\n")
 		return response, nil
 	}
 }

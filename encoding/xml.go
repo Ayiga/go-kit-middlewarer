@@ -45,13 +45,3 @@ func (XML) EncodeResponse() httptransport.EncodeResponseFunc {
 func (XML) DecodeResponse(response interface{}) httptransport.DecodeResponseFunc {
 	return MakeResponseDecoder(response, XMLGenerateDecoder)
 }
-
-// encoder implements RequestResponseEncoding
-func (XML) encoder(w io.Writer) Encoder {
-	return XMLGenerateEncoder(w)
-}
-
-// decoder implements RequestResponseEncoding
-func (XML) decoder(r io.Reader) Decoder {
-	return XMLGenerateDecoder(r)
-}
