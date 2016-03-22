@@ -38,6 +38,12 @@ func createImport(imp *ast.ImportSpec) Import {
 	} else {
 		name = n.String()
 	}
+
+	if strings.Contains(name, "-") {
+		namePieces := strings.Split(name, "-")
+		name = namePieces[len(namePieces)-1]
+	}
+
 	return Import{
 		name: name,
 		path: pth,
