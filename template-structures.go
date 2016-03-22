@@ -7,6 +7,7 @@ import (
 
 type TemplateCommon struct {
 	BasePackage         string
+	BasePackageImport   string
 	BasePackageName     string
 	EndpointPackage     string
 	EndpointPackageName string
@@ -99,6 +100,7 @@ func createTemplateMethods(basePackage, endpointPackage Import, interf Interface
 		results = append(results, TemplateMethod{
 			TemplateCommon: TemplateCommon{
 				BasePackage:         basePackage.path,
+				BasePackageImport:   basePackage.ImportSpec(),
 				BasePackageName:     basePackage.name,
 				EndpointPackage:     endpointPackage.path,
 				EndpointPackageName: endpointPackage.name,
@@ -173,6 +175,7 @@ func createTemplateBase(basePackage, endpointPackage Import, i Interface, oimps 
 	return TemplateBase{
 		TemplateCommon: TemplateCommon{
 			BasePackage:         basePackage.path,
+			BasePackageImport:   basePackage.ImportSpec(),
 			BasePackageName:     basePackage.name,
 			EndpointPackage:     endpointPackage.path,
 			EndpointPackageName: endpointPackage.name,

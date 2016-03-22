@@ -2,7 +2,7 @@
 // To make changes to this file, please modify the templates at
 // go-kit-middlewarer/tmpl/*.tmpl
 
-package transport
+package http
 
 import (
 	"golang.org/x/net/context"
@@ -14,15 +14,26 @@ import (
 	kitendpoint "github.com/go-kit/kit/endpoint"
 
 	"{{.EndpointPackage}}"
-	"{{.BasePackage}}"
+	{{.BasePackageImport}}
 )
+
+var LoadBalancerRetryCount = 3
 
 // endpointFromLoadBalancer is a nice helper function that will pull an endpoint
 // off of a load balancer and initiate the request.  However, if an error is
 // encountered, it will handle it instead.
 func endpointFromLoadBalancer( lb kitloadbalancer.LoadBalancer ) kitendpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		ep, err := lb.Endpoint()
+		var ep kitendpoint.Endpoint
+		var err error
+		for i := 0; i < 3; i++ {
+			ep, err = lb.Endpoint()
+			if err != nil && err != kitloadbalancer.ErrNoEndpoints {
+				continue
+			}
+			break
+		}
+
 		if err != nil {
 			return nil, err
 		}

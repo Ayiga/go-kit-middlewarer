@@ -12,8 +12,9 @@ import (
 
 	{{range .ImportsWithoutTime}}{{template "identity" .}}
 	{{end}}
-	"{{.BasePackage}}"
+
 	"{{.EndpointPackage}}"
+	{{.BasePackageImport}}
 )
 
 type logging{{.InterfaceName}} struct {
