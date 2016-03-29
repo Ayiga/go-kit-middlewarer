@@ -2,14 +2,14 @@
 // To make changes to this file, please modify the templates at
 // go-kit-middlewarer/tmpl/*.tmpl
 
-package transport
+package http
 
 import(
 	"golang.org/x/net/context"
 
 	"github.com/go-kit/kit/endpoint"
 
-	"{{.BasePackage}}"
+	{{.BasePackageImport}}
 )
 
 {{define "make-endpoint"}}

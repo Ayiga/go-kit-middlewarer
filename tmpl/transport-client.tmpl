@@ -2,7 +2,7 @@
 // To make changes to this file, please modify the templates at
 // go-kit-middlewarer/tmpl/*.tmpl
 
-package transport
+package http
 
 import (
 	"time"
@@ -14,7 +14,7 @@ import (
 	{{range .ImportsWithoutTime}}{{.}}
 	{{end}}
 
-	"{{.BasePackage}}"
+	{{.BasePackageImport}}
 )
 
 var _ {{.BasePackageName}}.{{.InterfaceName}}

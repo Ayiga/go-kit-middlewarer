@@ -2,7 +2,7 @@
 // To make changes to this file, please modify the templates at
 // go-kit-middlewarer/tmpl/*.tmpl
 
-package transport
+package http
 
 import(
 	"net/http"
@@ -12,7 +12,7 @@ import(
 	ep "github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
 
-	"{{.BasePackage}}"
+	{{.BasePackageImport}}
 	"{{.EndpointPackage}}"
 )
 

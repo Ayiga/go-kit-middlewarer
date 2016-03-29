@@ -3,7 +3,7 @@
 // go-kit-middlewarer/tmpl/*.tmpl
 
 
-package transport
+package http
 
 import (
 	"net/http"
@@ -13,7 +13,7 @@ import (
 	{{range .Imports}}{{.}}
 	{{end}}
 
-	"{{.BasePackage}}"
+	{{.BasePackageImport}}
 )
 
 var _ {{.BasePackageName}}.{{.InterfaceName}}

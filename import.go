@@ -16,8 +16,14 @@ type Import struct {
 
 func createImportWithPath(p string) Import {
 	last := path.Base(p)
+	name := last
+	if strings.Contains(last, "-") {
+		lastPieces := strings.Split(last, "-")
+		name = lastPieces[len(lastPieces)-1]
+	}
+
 	return Import{
-		name: last,
+		name: name,
 		path: p,
 		last: last,
 	}
@@ -32,6 +38,12 @@ func createImport(imp *ast.ImportSpec) Import {
 	} else {
 		name = n.String()
 	}
+
+	if strings.Contains(name, "-") {
+		namePieces := strings.Split(name, "-")
+		name = namePieces[len(namePieces)-1]
+	}
+
 	return Import{
 		name: name,
 		path: pth,
