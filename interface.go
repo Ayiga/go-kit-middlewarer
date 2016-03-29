@@ -32,7 +32,7 @@ func createInterface(name string, iface *ast.InterfaceType, reservedNames []stri
 			// this is an interface.
 			// var suggestedName = ""
 
-			n := resolveFieldTypes(f.Type)
+			n := resolveFieldTypes(f.Type, file.pkg.name)
 			potentialNamePieces := strings.Split(n, ".")
 			if len(potentialNamePieces) > 0 {
 				// suggestedName = strings.ToLower(potentialNamePieces[len(potentialNamePieces)-1])
