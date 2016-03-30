@@ -22,7 +22,8 @@ func make{{.MethodName}}Endpoint({{.InterfaceNameLcase}} {{.BasePackageName}}.{{
 		resp.embedMime = new(embedMime)
 
 		{{if .Params}}
-		{{range .Params}}{{if .IsContext}}{{else}}{{.Name}} := req.{{.PublicName}}{{end}}{{end}}{{end}}
+		{{range .Params}}{{if .IsContext}}{{else}}{{.Name}} := req.{{.PublicName}}{{end}}
+		{{end}}{{end}}
 
 		{{if .Results}}
 		{{.MethodResultNamesStr}} := {{.InterfaceNameLcase}}.{{.MethodName}}({{.MethodArgumentNamesStr}})
