@@ -11,6 +11,9 @@ type Method struct {
 	params  []Param
 	results []Param
 
+	hasContextParam  bool
+	contextParamName string
+
 	pkg        *Package
 	file       File
 	imports    []Import
@@ -37,15 +40,38 @@ func createMethod(field *ast.Field, reservedNames []string, file File) Method {
 
 	if fun.Params != nil {
 		for _, f := range fun.Params.List {
-			m.params = append(m.params, createParam(f, names, "input", file))
-			names = append(names, m.params[len(m.params)-1].names...)
+			param := createParam(f, names, "input", file)
+			paramNames := param.names
+
+			if param.typ.String() == "context.Context" {
+				m.hasContextParam = true
+				m.contextParamName = paramNames[0]
+			}
+
+			for _, imp := range file.pkg.imports {
+				if strings.HasPrefix(param.typ.String(), fmt.Sprintf("%s.", imp.name)) {
+					imp.isParam = true
+				}
+			}
+
+			m.params = append(m.params, param)
+			names = append(names, paramNames...)
 		}
 	}
 
 	if fun.Results != nil {
 		for _, f := range fun.Results.List {
-			m.results = append(m.results, createParam(f, names, "output", file))
-			names = append(names, m.results[len(m.results)-1].names...)
+			param := createParam(f, names, "output", file)
+			paramNames := param.names
+
+			for _, imp := range file.pkg.imports {
+				if strings.HasPrefix(param.typ.String(), fmt.Sprintf("%s.", imp.name)) {
+					imp.isParam = true
+				}
+			}
+
+			m.results = append(m.results, param)
+			names = append(names, paramNames...)
 		}
 	}
 

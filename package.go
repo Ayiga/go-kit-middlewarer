@@ -14,7 +14,7 @@ type Package struct {
 	defs     map[*ast.Ident]types.Object
 	typesPkg *types.Package
 
-	imports    []Import
+	imports    []*Import
 	types      []Type
 	interfaces []Interface
 	structs    []Struct

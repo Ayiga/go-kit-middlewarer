@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"go/ast"
 	"strings"
 )
@@ -30,22 +31,18 @@ func createInterface(name string, iface *ast.InterfaceType, reservedNames []stri
 			interf.methods = append(interf.methods, createMethod(f, names, file))
 		} else {
 			// this is an interface.
-			// var suggestedName = ""
-
 			n := resolveFieldTypes(f.Type, file.pkg.name)
 			potentialNamePieces := strings.Split(n, ".")
 			if len(potentialNamePieces) > 0 {
-				// suggestedName = strings.ToLower(potentialNamePieces[len(potentialNamePieces)-1])
 			}
 
-			// p := createParam(f, reservedNames, suggestedName, file)
-
-			// if len(p.names) > 0 {
-			// 	reservedNames = append(reservedNames, p.names[0])
-			// 	// add it to the reserved name
-			// }
-
 			interf.types = append(interf.types, createType(f.Type, file.pkg))
+
+			for _, imp := range file.pkg.imports {
+				if strings.HasPrefix(n, fmt.Sprintf("%s.", imp.name)) {
+					imp.isEmbeded = true
+				}
+			}
 		}
 	}
 	return interf

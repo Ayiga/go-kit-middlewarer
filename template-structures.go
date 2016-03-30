@@ -20,6 +20,7 @@ type TemplateParam struct {
 	PublicName string
 	Name       string
 	Type       string
+	IsContext  bool
 }
 
 func createTemplateParam(p Param) TemplateParam {
@@ -30,6 +31,8 @@ func createTemplateParam(p Param) TemplateParam {
 
 type TemplateMethod struct {
 	TemplateCommon
+	HasContextParam        bool
+	ContextParamName       string
 	LocalName              string
 	MethodName             string
 	MethodNameLcase        string
@@ -63,7 +66,7 @@ func privateVariableName(str string) string {
 	return strings.ToLower(firstLetter) + rest
 }
 
-func createTemplateMethods(basePackage, endpointPackage Import, interf Interface, methods []Method, reseveredNames []string) []TemplateMethod {
+func createTemplateMethods(basePackage, endpointPackage *Import, interf Interface, methods []Method, reseveredNames []string) []TemplateMethod {
 	results := make([]TemplateMethod, 0, len(methods))
 	for _, meth := range methods {
 		var names []string
@@ -74,13 +77,22 @@ func createTemplateMethods(basePackage, endpointPackage Import, interf Interface
 
 		var paramNames []string
 		for _, p := range meth.params {
-			paramNames = append(paramNames, p.names...)
+			// skip the context name, as this is primarily used to retrieve
+			// values after transport.
+			if !meth.hasContextParam || meth.contextParamName != p.names[0] {
+				paramNames = append(paramNames, p.names...)
+			}
 			for _, n := range p.names {
-				params = append(params, TemplateParam{
+				param := TemplateParam{
 					PublicName: publicVariableName(n),
 					Name:       n,
 					Type:       p.typ.String(),
-				})
+				}
+				if param.Type == "context.Context" {
+					param.IsContext = true
+				}
+
+				params = append(params, param)
 			}
 		}
 
@@ -96,6 +108,11 @@ func createTemplateMethods(basePackage, endpointPackage Import, interf Interface
 			}
 		}
 
+		contextParamName := "_ctx"
+		if meth.hasContextParam {
+			contextParamName = meth.contextParamName
+		}
+
 		lcaseName := determineLocalName(strings.ToLower(interf.name), reseveredNames)
 		results = append(results, TemplateMethod{
 			TemplateCommon: TemplateCommon{
@@ -108,6 +125,8 @@ func createTemplateMethods(basePackage, endpointPackage Import, interf Interface
 				InterfaceName:       interf.name,
 				InterfaceNameLcase:  privateVariableName(interf.name),
 			},
+			HasContextParam:        meth.hasContextParam,
+			ContextParamName:       contextParamName,
 			MethodName:             meth.name,
 			MethodNameLcase:        privateVariableName(meth.name),
 			LocalName:              lcaseName,
@@ -133,9 +152,9 @@ type TemplateBase struct {
 	ExtraInterfaces    []TemplateParam
 }
 
-func createTemplateBase(basePackage, endpointPackage Import, i Interface, oimps []Import) TemplateBase {
-	imps := filteredImports(i, oimps)
-	extraImps := filteredExtraImports(i, oimps)
+func createTemplateBase(basePackage, endpointPackage *Import, i Interface, oimps []*Import) TemplateBase {
+	// imps := filteredImports(i, oimps)
+	imps := oimps
 
 	names := make([]string, 0, len(imps))
 	for _, i := range imps {
@@ -144,16 +163,20 @@ func createTemplateBase(basePackage, endpointPackage Import, i Interface, oimps 
 
 	var impSpecs []string
 	var impSpecsWithoutTime []string
-	for _, i := range imps {
-		impSpecs = append(impSpecs, i.ImportSpec())
-		if i.path != "time" {
-			impSpecsWithoutTime = append(impSpecsWithoutTime, i.ImportSpec())
-		}
-	}
-
 	var extraImpSpecs []string
-	for _, i := range extraImps {
-		extraImpSpecs = append(extraImpSpecs, i.ImportSpec())
+	for _, i := range imps {
+		if !i.isParam && i.isEmbeded {
+			extraImpSpecs = append(extraImpSpecs, i.ImportSpec())
+			// skip non-params for these imports
+			continue
+		}
+
+		if i.isParam {
+			impSpecs = append(impSpecs, i.ImportSpec())
+			if i.path != "time" {
+				impSpecsWithoutTime = append(impSpecsWithoutTime, i.ImportSpec())
+			}
+		}
 	}
 
 	var extraInterfaces []TemplateParam
@@ -195,44 +218,6 @@ func filteredExtraImports(i Interface, imps []Import) []Import {
 	var res []Import
 	var tmp []string
 	for _, imp := range imps {
-		for _, t := range i.types {
-			if strings.HasPrefix(t.String(), fmt.Sprintf("%s.", imp.name)) {
-				if !sliceContains(tmp, imp.ImportSpec()) {
-					res = append(res, imp)
-					tmp = append(tmp, imp.ImportSpec())
-				}
-			}
-		}
-	}
-	return res
-}
-
-func filteredImports(i Interface, imps []Import) []Import {
-	res := make([]Import, 0, len(imps))
-	tmp := make([]string, 0, len(imps))
-	for _, imp := range imps {
-		for _, meth := range i.methods {
-			for _, param := range meth.params {
-				if strings.HasPrefix(param.typ.String(), fmt.Sprintf("%s.", imp.name)) ||
-					strings.HasPrefix(param.typ.String(), fmt.Sprintf("*%s.", imp.name)) {
-					if !sliceContains(tmp, imp.ImportSpec()) {
-						res = append(res, imp)
-						tmp = append(tmp, imp.ImportSpec())
-					}
-				}
-			}
-
-			for _, result := range meth.results {
-				if strings.HasPrefix(result.typ.String(), fmt.Sprintf("%s.", imp.name)) ||
-					strings.HasPrefix(result.typ.String(), fmt.Sprintf("*%s.", imp.name)) {
-					if !sliceContains(tmp, imp.ImportSpec()) {
-						res = append(res, imp)
-						tmp = append(tmp, imp.ImportSpec())
-					}
-				}
-			}
-		}
-
 		for _, t := range i.types {
 			if strings.HasPrefix(t.String(), fmt.Sprintf("%s.", imp.name)) {
 				if !sliceContains(tmp, imp.ImportSpec()) {

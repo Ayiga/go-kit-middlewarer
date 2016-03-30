@@ -17,6 +17,8 @@ import (
 	{{.BasePackageImport}}
 )
 
+// LoadBalancerRetryCount refers to the number of times the Loadbalanced backed
+// client will attempt to get an endpoint.
 var LoadBalancerRetryCount = 3
 
 // endpointFromLoadBalancer is a nice helper function that will pull an endpoint

@@ -9,12 +9,14 @@ import (
 )
 
 type Import struct {
-	name string
-	path string
-	last string
+	name      string
+	path      string
+	last      string
+	isEmbeded bool
+	isParam   bool
 }
 
-func createImportWithPath(p string) Import {
+func createImportWithPath(p string) *Import {
 	last := path.Base(p)
 	name := last
 	if strings.Contains(last, "-") {
@@ -22,14 +24,14 @@ func createImportWithPath(p string) Import {
 		name = lastPieces[len(lastPieces)-1]
 	}
 
-	return Import{
+	return &Import{
 		name: name,
 		path: p,
 		last: last,
 	}
 }
 
-func createImport(imp *ast.ImportSpec) Import {
+func createImport(imp *ast.ImportSpec) *Import {
 	var name string
 	pth := strings.TrimPrefix(strings.TrimSuffix(imp.Path.Value, "\""), "\"")
 	last := path.Base(pth)
@@ -44,7 +46,7 @@ func createImport(imp *ast.ImportSpec) Import {
 		name = namePieces[len(namePieces)-1]
 	}
 
-	return Import{
+	return &Import{
 		name: name,
 		path: pth,
 		last: last,

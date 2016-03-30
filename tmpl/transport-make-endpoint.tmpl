@@ -16,15 +16,13 @@ import(
 // make{{.MethodName}}Endpoint creates a github.com/go-kit/kit/endpoint.Endpoint for {{.BasePackage}}.{{.InterfaceName}}.{{.MethodName}}.
 // It will automatically wrap and unwrap the arguments and results of the method.
 func make{{.MethodName}}Endpoint({{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceName}}) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func({{.ContextParamName}} context.Context, request interface{}) (interface{}, error) {
 		req := request.(*{{.MethodNameLcase}}Request)
 		var resp {{.MethodNameLcase}}Response
 		resp.embedMime = new(embedMime)
 
 		{{if .Params}}
-		{{range .Params}}
-		{{.Name}} := req.{{.PublicName}}
-		{{end}}{{end}}
+		{{range .Params}}{{if .IsContext}}{{else}}{{.Name}} := req.{{.PublicName}}{{end}}{{end}}{{end}}
 
 		{{if .Results}}
 		{{.MethodResultNamesStr}} := {{.InterfaceNameLcase}}.{{.MethodName}}({{.MethodArgumentNamesStr}})

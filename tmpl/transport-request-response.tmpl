@@ -74,5 +74,5 @@ func encode{{.MethodName}}Response (w http.ResponseWriter, response interface{})
 }
 
 {{end}}
-{{define "param"}}	{{.PublicName}} {{.Type}} `json:"{{.Name}}" xml:"{{.Name}}"`{{end}}
+{{define "param"}}	{{if .IsContext}}{{else}}{{.PublicName}} {{.Type}} `json:"{{.Name}}" xml:"{{.Name}}"`{{end}}{{end}}
 {{range .Methods}}{{template "request-response" .}}{{end}}

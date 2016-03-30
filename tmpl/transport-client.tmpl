@@ -13,12 +13,16 @@ import (
 
 	{{range .ImportsWithoutTime}}{{.}}
 	{{end}}
+	{{range .ExtraImports}}
+	{{.}}{{end}}
 
 	{{.BasePackageImport}}
 )
 
 var _ {{.BasePackageName}}.{{.InterfaceName}}
 
+// DefaultRequestTimeout represents an overwritable Request timeout.
+var DefaultRequestTimeout = time.Second
 
 type client{{.InterfaceName}} struct {
 	{{range .ExtraInterfaces}}{{.Type}}
@@ -30,18 +34,22 @@ type client{{.InterfaceName}} struct {
 {{range .Methods}}
 // {{.MethodName}} implements {{.BasePackage}}.{{.InterfaceName}}
 func ({{.LocalName}} client{{.InterfaceName}}) {{.MethodName}}({{.MethodArguments}}) ({{.MethodResults}}) {
-	ctx, _ := context.WithTimeout(context.Background(), time.Second)
+	{{if .HasContextParam}}
+	{{.ContextParamName}}, _ = context.WithTimeout({{.ContextParamName}}, DefaultRequestTimeout)
+	{{else}}
+	{{.ContextParamName}}, _ := context.WithTimeout(context.Background(), DefaultRequestTimeout)
+	{{end}}
 
-	request := {{.MethodNameLcase}}Request{
-		{{range .Params}}{{template "param" .}}
+	_request := {{.MethodNameLcase}}Request{
+		{{range .Params}}{{if .IsContext}}{{else}}{{template "param" .}}{{end}}
 		{{end}}
 	}
 
-	request.embedMime = new(embedMime)
+	_request.embedMime = new(embedMime)
 
-	response, err := {{.LocalName}}.{{.MethodNameLcase}}Endpoint(
-		ctx,
-		&request,
+	_response, err := {{.LocalName}}.{{.MethodNameLcase}}Endpoint(
+		{{.ContextParamName}},
+		&_request,
 	)
 
 	if err != nil {
@@ -49,12 +57,12 @@ func ({{.LocalName}} client{{.InterfaceName}}) {{.MethodName}}({{.MethodArgument
 	}
 
 	{{if .Results}}
-	resp := response.(*{{.MethodNameLcase}}Response)
+	_resp := _response.(*{{.MethodNameLcase}}Response)
 
-	{{range .Results}}{{.Name}} = resp.{{.PublicName}}
+	{{range .Results}}{{.Name}} = _resp.{{.PublicName}}
 	{{end}}
 	{{else}}
-	_ = response.(*{{.MethodNameLcase}}Response)
+	_ = _response.(*{{.MethodNameLcase}}Response)
 	{{end}}
 
 	return

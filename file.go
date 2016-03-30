@@ -12,7 +12,7 @@ type File struct {
 	fileName string
 	// These fields are reset for each type being generated.
 
-	imports    []Import
+	imports    []*Import
 	types      []Type
 	interfaces []Interface
 	structs    []Struct
@@ -24,6 +24,12 @@ type File struct {
 func (f *File) genImportsAndTypes(node ast.Node) bool {
 	switch t := node.(type) {
 	case *ast.ImportSpec:
+		// filter out context.Context, the reason for this is that we'd like to
+		// automatically pass context into the trasnports when they occur.
+		if t.Path.Value == "\"golang.org/x/net/context\"" {
+			return false
+		}
+
 		imp := createImport(t)
 		f.imports = append(f.imports, imp)
 		f.pkg.imports = append(f.pkg.imports, imp)
@@ -35,6 +41,7 @@ func (f *File) genImportsAndTypes(node ast.Node) bool {
 			if !t.Name.IsExported() {
 				return false
 			}
+
 			i := createInterface(t.Name.Name, s, []string{}, *f)
 			f.interfaces = append(f.interfaces, i)
 			f.pkg.interfaces = append(f.pkg.interfaces, i)
