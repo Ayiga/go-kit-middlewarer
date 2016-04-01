@@ -27,28 +27,36 @@ func epID( ep ep.Endpoint ) ep.Endpoint {
 	return ep
 }
 
+func httpServerFactory( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceName}}, wrappers []ServerLayer, options []httptransport.ServerOption, path string, endp toEndpoint, dec httptransport.DecodeRequestFunc, enc httptransport.EncodeResponseFunc) {
+	ctx := context.Background()
+	var mappedLayers []ep.Middleware
+	for _, w := range wrappers {
+		mappedLayers = append( mappedLayers, w( {{.InterfaceNameLcase}}, path ))
+	}
+
+	http.Handle(path,
+		httptransport.NewServer(
+			ctx,
+			ep.Chain(epID, mappedLayers...)(endp({{.InterfaceNameLcase}})),
+			dec,
+			enc,
+			options...
+		),
+	)
+}
+
 // HTTPServersForEndpoints will take the given arguments, associate all of
 // the proper endpoints together, and register itself as an HTTP handler for
 // {{.BasePackage}}.{{.InterfaceName}}
 func HTTPServersForEndpoints( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceName}}, wrappers ...ServerLayer ) {
-	ctx := context.Background()
-	f := func( path string, endp toEndpoint, dec httptransport.DecodeRequestFunc, enc httptransport.EncodeResponseFunc) {
-
-		var mappedLayers []ep.Middleware
-		for _, w := range wrappers {
-			mappedLayers = append( mappedLayers, w( {{.InterfaceNameLcase}}, path ))
-		}
-
-		http.Handle(path,
-			httptransport.NewServer(
-				ctx,
-				ep.Chain(epID, mappedLayers...)(endp({{.InterfaceNameLcase}})),
-				dec,
-				enc,
-			),
-		)
-	}
-
 	{{range .Methods}}
-	f( {{.EndpointPackageName}}.Path{{.MethodName}}, make{{.MethodName}}Endpoint, decode{{.MethodName}}Request, encode{{.MethodName}}Response ){{end}}
+	httpServerFactory( {{.InterfaceNameLcase}}, wrappers, nil, {{.EndpointPackageName}}.Path{{.MethodName}}, make{{.MethodName}}Endpoint, decode{{.MethodName}}Request, encode{{.MethodName}}Response ){{end}}
+}
+
+// HTTPServersForEndpointsWithOptions will take the given arguments, associate all of
+// the proper endpoints together, and register itself as an HTTP handler for
+// {{.BasePackage}}.{{.InterfaceName}}
+func HTTPServersForEndpointsWithOptions( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceName}}, wrappers []ServerLayer, options []httptransport.ServerOption ) {
+	{{range .Methods}}
+	httpServerFactory( {{.InterfaceNameLcase}}, wrappers, options, {{.EndpointPackageName}}.Path{{.MethodName}}, make{{.MethodName}}Endpoint, decode{{.MethodName}}Request, encode{{.MethodName}}Response ){{end}}
 }
