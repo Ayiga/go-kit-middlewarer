@@ -231,6 +231,7 @@ func TestXMLEncodeDecodeResponse(t *testing.T) {
 	}
 
 	ro := new(http.Response)
+	ro.StatusCode = 200
 	ro.Body = ioutil.NopCloser(buf)
 	ro.Header = make(http.Header)
 	ro.Header.Set("Content-Type", "application/xml")
@@ -292,6 +293,7 @@ func TestGobEncodeDecodeResponse(t *testing.T) {
 	}
 
 	ro := new(http.Response)
+	ro.StatusCode = 200
 	ro.Body = ioutil.NopCloser(buf)
 	ro.Header = make(http.Header)
 	ro.Header.Set("Content-Type", "application/gob")

@@ -31,7 +31,8 @@ type request struct {
 
 type responseWriter struct {
 	*bytes.Buffer
-	headers http.Header
+	statusCode int
+	headers    http.Header
 }
 
 func (rw *responseWriter) Header() http.Header {
@@ -39,9 +40,10 @@ func (rw *responseWriter) Header() http.Header {
 }
 
 func (rw *responseWriter) WriteHeader(status int) {
+	rw.statusCode = status
 }
 
-func createResponseWriter(buf *bytes.Buffer) http.ResponseWriter {
+func createResponseWriter(buf *bytes.Buffer) *responseWriter {
 	return &responseWriter{
 		Buffer:  buf,
 		headers: make(http.Header),

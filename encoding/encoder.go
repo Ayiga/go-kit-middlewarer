@@ -36,6 +36,14 @@ func MakeRequestEncoder(gen GenerateEncoder) httptransport.EncodeRequestFunc {
 // httpstransport.EncodeResponseFunc
 func MakeResponseEncoder(gen GenerateEncoder) httptransport.EncodeResponseFunc {
 	return func(w http.ResponseWriter, response interface{}) error {
+		if e, ok := response.(error); ok {
+			// we have an error, we'll wrap it, to ensure it's transmission
+			// encode-ability
+
+			we := WrapError(e)
+			return gen(w).Encode(&we)
+		}
+
 		return gen(w).Encode(response)
 	}
 }

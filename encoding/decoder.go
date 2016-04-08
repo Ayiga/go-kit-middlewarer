@@ -1,7 +1,9 @@
 package encoding
 
 import (
+	"errors"
 	"io"
+	"io/ioutil"
 	"net/http"
 
 	httptransport "github.com/go-kit/kit/transport/http"
@@ -34,6 +36,39 @@ func MakeRequestDecoder(request interface{}, gen GenerateDecoder) httptransport.
 // function that can decode a given Response.
 func MakeResponseDecoder(response interface{}, gen GenerateDecoder) httptransport.DecodeResponseFunc {
 	return func(r *http.Response) (interface{}, error) {
+		if r.StatusCode < 200 || r.StatusCode > 299 {
+			// I'm assuming we have an error at this point, and we should
+			// represent it as such.
+			ct := parseContentType(r.Header.Get("Content-Type"))
+			if ct.contentType == "text/plain" {
+				// ok, this is just a simple plain text document, there's not
+				// much to do here... so we'll transmit it plainly.
+				c, err := ioutil.ReadAll(r.Body)
+				if err != nil {
+					return nil, err
+				}
+
+				// this is unfortunate, but we have no other information to
+				// decode with, so at the very least, let's report it as an
+				// error
+				return errors.New(string(c)), nil
+			}
+
+			var we WrapperError
+			// we'll let the current Decoder try to decode the error.  In this
+			// case we'll give it the custom error type we've created, to wrap
+			// the error so we can ensure it decodes properly...
+			if err := gen(r.Body).Decode(&we); err != nil {
+				return nil, err
+			}
+
+			if _, ok := we.Err.(error); we.Err != nil && ok {
+				return we.Err, nil
+			}
+
+			return we, nil
+		}
+
 		if err := gen(r.Body).Decode(response); err != nil {
 			return nil, err
 		}

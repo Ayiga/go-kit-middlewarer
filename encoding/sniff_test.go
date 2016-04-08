@@ -162,6 +162,7 @@ func TestJSONResponseSniff1(t *testing.T) {
 	e.embedMime = new(embedMime)
 
 	response := new(http.Response)
+	response.StatusCode = 200
 
 	str := "{\"str\":\"bar\",\"num\": 10,\"bool\":true,\"null\":null}"
 	t.Logf("Data: %s\n", str)
@@ -210,6 +211,7 @@ func TestXMLResponseSniff1(t *testing.T) {
 	e.embedMime = new(embedMime)
 
 	response := new(http.Response)
+	response.StatusCode = 200
 
 	str := "<request><str>bar</str><num>10.0</num><bool>true</bool><null>null</null></request>"
 	t.Logf("Data: %s\n", str)
@@ -258,6 +260,7 @@ func TestGobResponseSniff1(t *testing.T) {
 	e.embedMime = new(embedMime)
 
 	response := new(http.Response)
+	response.StatusCode = 200
 
 	b := []byte{0x37, 0xff, 0x81, 0x03, 0x01, 0x01, 0x07, 0x72, 0x65,
 		0x71, 0x75, 0x65, 0x73, 0x74, 0x01, 0xff, 0x82, 0x00,
