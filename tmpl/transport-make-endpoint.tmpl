@@ -16,28 +16,35 @@ import(
 // make{{.MethodName}}Endpoint creates a github.com/go-kit/kit/endpoint.Endpoint for {{.BasePackage}}.{{.InterfaceName}}.{{.MethodName}}.
 // It will automatically wrap and unwrap the arguments and results of the method.
 func make{{.MethodName}}Endpoint({{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceName}}) endpoint.Endpoint {
-	return func({{.ContextParamName}} context.Context, request interface{}) (interface{}, error) {
+	return func({{.ContextParamName}} context.Context, request interface{}) (resp interface{}, {{.ErrorResultName}} error) {
 		req := request.(*{{.MethodNameLcase}}Request)
-		var resp {{.MethodNameLcase}}Response
-		resp.embedMime = new(embedMime)
+		var _resp {{.MethodNameLcase}}Response
+		_resp.embedMime = new(embedMime)
 
 		{{if .Params}}
 		{{range .Params}}{{if .IsContext}}{{else}}{{.Name}} := req.{{.PublicName}}{{end}}
 		{{end}}{{end}}
 
 		{{if .Results}}
+		{{if .HasMoreThanOneResult}}
 		{{.MethodResultNamesStr}} := {{.InterfaceNameLcase}}.{{.MethodName}}({{.MethodArgumentNamesStr}})
-		{{range .Results}}resp.{{.PublicName}} = {{.Name}}
+		{{else if .HasErrorResult}}
+		{{.MethodResultNamesStr}} = {{.InterfaceNameLcase}}.{{.MethodName}}({{.MethodArgumentNamesStr}})
+		{{else}}
+		{{.MethodResultNamesStr}} := {{.InterfaceNameLcase}}.{{.MethodName}}({{.MethodArgumentNamesStr}})
+		{{end}}
+		{{range .Results}}_resp.{{.PublicName}} = {{.Name}}
 		{{end}}
 		{{else}}
 		{{.InterfaceNameLcase}}.{{.MethodName}}({{.MethodArgumentNamesStr}})
 		{{end}}
 
 		if mime := req.GetMime(); mime != "" {
-			resp.SetMime( mime )
+			_resp.SetMime( mime )
 		}
+		resp = _resp
 
-		return resp, nil
+		return
 	}
 }
 {{end}}

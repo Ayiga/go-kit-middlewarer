@@ -33,6 +33,9 @@ type TemplateMethod struct {
 	TemplateCommon
 	HasContextParam        bool
 	ContextParamName       string
+	HasErrorResult         bool
+	ErrorResultName        string
+	HasMoreThanOneResult   bool
 	LocalName              string
 	MethodName             string
 	MethodNameLcase        string
@@ -113,6 +116,11 @@ func createTemplateMethods(basePackage, endpointPackage *Import, interf Interfac
 			contextParamName = meth.contextParamName
 		}
 
+		errorResultName := "err"
+		if meth.hasErrResult {
+			errorResultName = meth.errorResultName
+		}
+
 		lcaseName := determineLocalName(strings.ToLower(interf.name), reseveredNames)
 		results = append(results, TemplateMethod{
 			TemplateCommon: TemplateCommon{
@@ -127,6 +135,9 @@ func createTemplateMethods(basePackage, endpointPackage *Import, interf Interfac
 			},
 			HasContextParam:        meth.hasContextParam,
 			ContextParamName:       contextParamName,
+			HasErrorResult:         meth.hasErrResult,
+			ErrorResultName:        errorResultName,
+			HasMoreThanOneResult:   meth.moreThanOneResult,
 			MethodName:             meth.name,
 			MethodNameLcase:        privateVariableName(meth.name),
 			LocalName:              lcaseName,

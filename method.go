@@ -11,8 +11,11 @@ type Method struct {
 	params  []Param
 	results []Param
 
-	hasContextParam  bool
-	contextParamName string
+	hasContextParam   bool
+	contextParamName  string
+	hasErrResult      bool
+	errorResultName   string
+	moreThanOneResult bool
 
 	pkg        *Package
 	file       File
@@ -60,9 +63,18 @@ func createMethod(field *ast.Field, reservedNames []string, file File) Method {
 	}
 
 	if fun.Results != nil {
+		numResult := 0
 		for _, f := range fun.Results.List {
 			param := createParam(f, names, "output", file)
 			paramNames := param.names
+
+			if param.typ.String() == "error" {
+				m.hasErrResult = true
+				m.errorResultName = "err"
+				if len(paramNames) > 0 {
+					m.errorResultName = paramNames[0]
+				}
+			}
 
 			for _, imp := range file.pkg.imports {
 				if strings.HasPrefix(param.typ.String(), fmt.Sprintf("%s.", imp.name)) {
@@ -70,9 +82,17 @@ func createMethod(field *ast.Field, reservedNames []string, file File) Method {
 				}
 			}
 
+			if len(paramNames) > 0 {
+				numResult += len(paramNames)
+			} else {
+				numResult++
+			}
+
 			m.results = append(m.results, param)
 			names = append(names, paramNames...)
 		}
+
+		m.moreThanOneResult = numResult > 1
 	}
 
 	return m
