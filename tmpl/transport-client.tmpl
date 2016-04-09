@@ -56,6 +56,15 @@ func ({{.LocalName}} client{{.InterfaceName}}) {{.MethodName}}({{.MethodArgument
 		return
 	}
 
+	var ok bool
+	err, ok = _response.(error)
+	if ok {
+		// we received an error from the server, so we'll return here.
+		// if the Method has a return type named err, this will come through
+		// it.
+		return
+	}
+
 	{{if .Results}}
 	_resp := _response.(*{{.MethodNameLcase}}Response)
 
