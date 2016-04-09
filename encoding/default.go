@@ -1,6 +1,8 @@
 package encoding
 
 import (
+	"errors"
+	"io/ioutil"
 	"mime"
 	"net/http"
 	"strconv"
@@ -201,13 +203,30 @@ func (def) EncodeResponse() httptransport.EncodeResponseFunc {
 // DecodeResponse implements RequestResponseEncoding
 func (def) DecodeResponse(response interface{}) httptransport.DecodeResponseFunc {
 	return func(r *http.Response) (interface{}, error) {
-		ct := r.Header.Get("Content-Type")
-		if ct == "" {
+		ct := parseContentType(r.Header.Get("Content-Type"))
+		if ct.contentType == "" {
 			// fall back
 			// let's try to guess the type based on the response
 			return hintResolver(0).DecodeResponse(response)(r)
-		} else if encoding, err := Get(ct); err == nil {
+		} else if encoding, err := Get(ct.contentType); err == nil {
 			return encoding.DecodeResponse(response)(r)
+		} else if r.StatusCode < 200 || r.StatusCode > 299 {
+			if ct.contentType == "text/plain" {
+				// ok, this is just a simple plain text document, there's not
+				// much to do here... so we'll transmit it plainly.
+				c, err := ioutil.ReadAll(r.Body)
+				if err != nil {
+					return nil, err
+				}
+
+				// this is unfortunate, but we have no other information to
+				// decode with, so at the very least, let's report it as an
+				// error
+				return errors.New(string(c)), nil
+			}
+
+			var we WrapperError
+			return hintResolver(0).DecodeResponse(&we)(r)
 		}
 
 		// let's try to guess the type based on the response
