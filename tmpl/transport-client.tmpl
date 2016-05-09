@@ -6,10 +6,11 @@ package http
 
 import (
 	"time"
+	"errors"
 
 	"golang.org/x/net/context"
 
-	"github.com/go-kit/kit/endpoint"
+	ep "github.com/go-kit/kit/endpoint"
 
 	{{range .ImportsWithoutTime}}{{.}}
 	{{end}}
@@ -17,6 +18,7 @@ import (
 	{{.}}{{end}}
 
 	{{.BasePackageImport}}
+	"{{.EndpointPackage}}"
 )
 
 var _ {{.BasePackageName}}.{{.InterfaceName}}
@@ -27,8 +29,23 @@ var DefaultRequestTimeout = time.Second
 type client{{.InterfaceName}} struct {
 	{{range .ExtraInterfaces}}{{.Type}}
 	{{end}}
-	{{range .Methods}}{{.MethodNameLcase}}Endpoint endpoint.Endpoint
+	{{range .Methods}}{{.MethodNameLcase}}Endpoint ep.Endpoint
 	{{end}}
+}
+
+// ErrMethodNotFound corresponds to a method that could not be found while
+// looking for it with a call to Endpoint on a client{{.InterfaceName}}
+var ErrMethodNotFound = errors.New("The provided method name was not found")
+
+// Endpoint implements github.com/go-kit/kit/service.Service
+func (client client{{.InterfaceName}}) Endpoint(method string) (ep.Endpoint, error) {
+	switch method {
+	{{range .Methods}}case endpoint.Path{{.MethodName}}, "{{.MethodName}}":
+		return client.{{.MethodNameLcase}}Endpoint, nil
+	{{end}}
+	default:
+		return nil, ErrMethodNotFound
+	}
 }
 
 {{range .Methods}}
