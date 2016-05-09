@@ -13,8 +13,9 @@ import (
 	{{.}}{{end}}
 
 	kitendpoint "github.com/go-kit/kit/endpoint"
+	kitservice "github.com/go-kit/kit/service"
+	kitservicediscovery "github.com/go-kit/kit/sd"
 	httptransport "github.com/go-kit/kit/transport/http"
-	kitloadbalancer "github.com/go-kit/kit/loadbalancer"
 
 	"{{.EndpointPackage}}"
 	{{.BasePackageImport}}
@@ -28,20 +29,20 @@ type ClientLayer func( addr, path string ) kitendpoint.Middleware
 
 // httpFactory will take a path, encoding function, decoding function, and a
 // slice of github.com/go-kit/kit/transport/http.ClientOption(s)
-func httpFactory( path string, enc httptransport.EncodeRequestFunc, dec httptransport.DecodeResponseFunc, clientLayers []ClientLayer, options []httptransport.ClientOption ) kitloadbalancer.Factory {
-	return func(addr string) (kitendpoint.Endpoint, io.Closer, error) {
+func httpFactory( path string, enc httptransport.EncodeRequestFunc, dec httptransport.DecodeResponseFunc, clientLayers []ClientLayer, options []httptransport.ClientOption ) func(string) (kitendpoint.Endpoint, error) {
+	return func(addr string) (kitendpoint.Endpoint, error) {
 		// first we need to ensure that the address given (addr) is valid.
 		if !strings.HasPrefix(addr, "http") {
 			addr = "http://" + addr
 		}
 		uri, err := url.Parse(addr)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		p, err := url.Parse(path)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		uri = uri.ResolveReference(p)
@@ -52,10 +53,10 @@ func httpFactory( path string, enc httptransport.EncodeRequestFunc, dec httptran
 
 		ep := cli.Endpoint()
 		for _, cl := range clientLayers {
-			ep = cl(addr,path)(ep)
+			ep = cl(addr, path)(ep)
 		}
 
-		return ep, nil, nil
+		return ep, nil
 	}
 }
 
@@ -76,7 +77,7 @@ func mapClientLayersToClientOptions( clientLayers []ClientLayer, addr, path stri
 func NewClient( addr string, {{range .ExtraInterfaces}}{{.Name}} {{.Type}}, {{end}}wrappers ...ClientLayer ) {{.BasePackageName}}.{{.InterfaceName}} {
 	var (
 		{{range .Methods}}
-		{{.MethodNameLcase}}Endpoint, _, _ = httpFactory( {{.EndpointPackageName}}.Path{{.MethodName}}, encode{{.MethodName}}Request, decode{{.MethodName}}Response, wrappers, nil)(addr){{end}}
+		{{.MethodNameLcase}}Endpoint, _ = httpFactory( {{.EndpointPackageName}}.Path{{.MethodName}}, encode{{.MethodName}}Request, decode{{.MethodName}}Response, wrappers, nil)(addr){{end}}
 	)
 
 	return &client{{.InterfaceName}} {
@@ -94,7 +95,7 @@ func NewClient( addr string, {{range .ExtraInterfaces}}{{.Name}} {{.Type}}, {{en
 func NewClientWithOptions( addr string, {{range .ExtraInterfaces}}{{.Name}} {{.Type}}, {{end}}wrappers []ClientLayer, options []httptransport.ClientOption ) {{.BasePackageName}}.{{.InterfaceName}} {
 	var (
 		{{range .Methods}}
-		{{.MethodNameLcase}}Endpoint, _, _ = httpFactory( {{.EndpointPackageName}}.Path{{.MethodName}}, encode{{.MethodName}}Request, decode{{.MethodName}}Response, wrappers, options)(addr){{end}}
+		{{.MethodNameLcase}}Endpoint, _ = httpFactory( {{.EndpointPackageName}}.Path{{.MethodName}}, encode{{.MethodName}}Request, decode{{.MethodName}}Response, wrappers, options)(addr){{end}}
 	)
 
 	return &client{{.InterfaceName}} {
@@ -102,5 +103,33 @@ func NewClientWithOptions( addr string, {{range .ExtraInterfaces}}{{.Name}} {{.T
 		{{end}}
 		{{range .Methods}}
 		{{.MethodNameLcase}}Endpoint: {{.MethodNameLcase}}Endpoint,{{end}}
+	}
+}
+
+// clientFactory is a function that returns a factory function that can
+// instanciate a Service given only an address.
+func clientFactory( {{range .ExtraInterfaces}}{{.Name}} {{.Type}}, {{end}}wrappers ...ClientLayer) kitservicediscovery.Factory {
+	return func( addr string ) (kitservice.Service, io.Closer, error) {
+		cli := NewClient( addr, {{range .ExtraInterfaces}} {{.Name}}, {{end}}wrappers...)
+
+		if svc, ok := cli.(kitservice.Service); ok {
+			return svc, nil, nil
+		}
+
+		return nil, nil, ErrCastFailed
+	}
+}
+
+// clientFactoryWithOptions is a function that returns a factory function that
+// can instanciate a Service given only an address.
+func clientFactoryWithOptions( {{range .ExtraInterfaces}}{{.Name}} {{.Type}}, {{end}}wrappers []ClientLayer, options []httptransport.ClientOption ) kitservicediscovery.Factory {
+	return func( addr string ) (kitservice.Service, io.Closer, error) {
+		cli := NewClientWithOptions( addr, {{range .ExtraInterfaces}} {{.Name}}, {{end}}wrappers, options)
+
+		if svc, ok := cli.(kitservice.Service); ok {
+			return svc, nil, nil
+		}
+
+		return nil, nil, ErrCastFailed
 	}
 }

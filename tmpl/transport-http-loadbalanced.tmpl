@@ -5,18 +5,66 @@
 package http
 
 import (
+	"errors"
+
 	"golang.org/x/net/context"
 
 	{{range .ExtraImports}}
 	{{.}}{{end}}
 
-	kitloadbalancer "github.com/go-kit/kit/loadbalancer"
+	kitservicediscovery "github.com/go-kit/kit/sd"
+	kitloadbalancer "github.com/go-kit/kit/sd/lb"
+	kitservice "github.com/go-kit/kit/service"
 	httptransport "github.com/go-kit/kit/transport/http"
 	kitendpoint "github.com/go-kit/kit/endpoint"
 
-	"{{.EndpointPackage}}"
 	{{.BasePackageImport}}
 )
+
+// clientLoadBalanced{{.InterfaceName}} represents a client that is load
+// balanced.
+type clientLoadBalanced{{.InterfaceName}} struct {
+	{{range .ExtraInterfaces}}{{.Type}}
+	{{end}}
+	balancer kitloadbalancer.Balancer
+}
+
+var ErrCastFailed = errors.New("Unable to Cast between github.com/go-kit/kit/service.Service and {{.BasePackage}}.{{.InterfaceName}}")
+
+// cast{{.InterfaceName}} will take a balancer and attempt to cast the
+// underlying github.com/go-kit/kit/service.Service to a {{.BasePackage}}.{{.InterfaceName}}
+func cast{{.InterfaceName}}(balancer kitloadbalancer.Balancer) ({{.BasePackageName}}.{{.InterfaceName}}, error) {
+	_svc, err := balancer.Service()
+	if err != nil {
+		return nil, err
+	}
+
+	if service, ok := _svc.({{.BasePackageName}}.{{.InterfaceName}}); ok {
+		return service, nil
+	}
+
+	return nil, ErrCastFailed
+}
+
+{{range .Methods}}
+// {{.MethodName}} implements {{.BasePackage}}.{{.InterfaceName}}
+func ({{.LocalName}} clientLoadBalanced{{.InterfaceName}}) {{.MethodName}}({{.MethodArguments}}) ({{.MethodResults}}) {
+	_result, err := cast{{.InterfaceName}}({{.LocalName}}.balancer)
+	if err != nil {
+		panic(err)
+	}
+
+	{{if .Results}}
+	return _result.{{.MethodName}}({{range .Params}}{{.Name}},
+	{{end}})
+	{{else}}
+	_result.{{.MethodName}}({{range .Params}}{{.Name}},
+	{{end}})
+	{{end}}
+}
+
+{{end}}
+
 
 // LoadBalancerRetryCount refers to the number of times the Loadbalanced backed
 // client will attempt to get an endpoint.
@@ -25,13 +73,13 @@ var LoadBalancerRetryCount = 3
 // endpointFromLoadBalancer is a nice helper function that will pull an endpoint
 // off of a load balancer and initiate the request.  However, if an error is
 // encountered, it will handle it instead.
-func endpointFromLoadBalancer( lb kitloadbalancer.LoadBalancer ) kitendpoint.Endpoint {
+func endpointFromLoadBalancer(b kitloadbalancer.Balancer, method string) kitendpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		var ep kitendpoint.Endpoint
+		var svc kitservice.Service
 		var err error
 		for i := 0; i < 3; i++ {
-			ep, err = lb.Endpoint()
-			if err != nil && err != kitloadbalancer.ErrNoEndpoints {
+			svc, err = b.Service()
+			if err != nil && err != kitloadbalancer.ErrNoServices {
 				continue
 			}
 			break
@@ -41,33 +89,34 @@ func endpointFromLoadBalancer( lb kitloadbalancer.LoadBalancer ) kitendpoint.End
 			return nil, err
 		}
 
+		ep, err := svc.Endpoint(method)
+		if err != nil {
+			return nil, err
+		}
+
 		return ep(ctx, request)
 	}
 }
 
 // GetLoadBalancerFunc describes a function which takes a
-// github.com/go-kit/kit/loadbalancer.LoadBalancer and returns a
-// github.com/go-kit/kit/loadbalancer.LoadBalancer
-type GetLoadBalancerFunc func( kitloadbalancer.Factory ) kitloadbalancer.LoadBalancer
+// github.com/go-kit/kit/sd.Factory and returns a
+// github.com/go-kit/kit/sd/lb.Balancer
+type GetLoadBalancerFunc func( kitservicediscovery.Factory ) kitloadbalancer.Balancer
 
 // NewLoadBalancedClient is a function that will return a Load balanced
 // client based on the load balancing conversion function provided.
 func NewLoadBalancedClient( get GetLoadBalancerFunc, {{range .ExtraInterfaces}}{{.Name}} {{.Type}}, {{end}}wrappers ...ClientLayer ) {{.BasePackageName}}.{{.InterfaceName}} {
-	return &client{{.InterfaceName}} {
-		{{range .ExtraInterfaces}}{{.PublicName}}: {{.Name}},
-		{{end}}
-		{{range .Methods}}{{.MethodNameLcase}}Endpoint: endpointFromLoadBalancer(get( httpFactory({{.EndpointPackageName}}.Path{{.MethodName}}, encode{{.MethodName}}Request, decode{{.MethodName}}Response, wrappers, nil))),
-		{{end}}
+	return &clientLoadBalanced{{.InterfaceName}}{
+		{{range .ExtraInterfaces}}{{.Name}}: {{.Name}},{{end}}
+		balancer: get(clientFactory({{range .ExtraInterfaces}}{{.Name}}, {{end}}wrappers...)),
 	}
 }
 
 // NewLoadBalancedClientWithOptions is a function that will return a Load balanced
 // client based on the load balancing conversion function provided.
 func NewLoadBalancedClientWithOptions( get GetLoadBalancerFunc, {{range .ExtraInterfaces}}{{.Name}} {{.Type}}, {{end}}wrappers []ClientLayer, options []httptransport.ClientOption ) {{.BasePackageName}}.{{.InterfaceName}} {
-	return &client{{.InterfaceName}} {
-		{{range .ExtraInterfaces}}{{.PublicName}}: {{.Name}},
-		{{end}}
-		{{range .Methods}}{{.MethodNameLcase}}Endpoint: endpointFromLoadBalancer(get( httpFactory({{.EndpointPackageName}}.Path{{.MethodName}}, encode{{.MethodName}}Request, decode{{.MethodName}}Response, wrappers, options))),
-		{{end}}
+	return &clientLoadBalanced{{.InterfaceName}}{
+		{{range .ExtraInterfaces}}{{.Name}}: {{.Name}},{{end}}
+		balancer: get(clientFactoryWithOptions({{range .ExtraInterfaces}}{{.Name}}, {{end}}wrappers, options)),
 	}
 }

@@ -11,6 +11,7 @@ import (
 	"golang.org/x/net/context"
 
 	ep "github.com/go-kit/kit/endpoint"
+	kitservice "github.com/go-kit/kit/service"
 
 	{{range .ImportsWithoutTime}}{{.}}
 	{{end}}
@@ -43,9 +44,17 @@ func (client client{{.InterfaceName}}) Endpoint(method string) (ep.Endpoint, err
 	{{range .Methods}}case endpoint.Path{{.MethodName}}, "{{.MethodName}}":
 		return client.{{.MethodNameLcase}}Endpoint, nil
 	{{end}}
-	default:
-		return nil, ErrMethodNotFound
 	}
+
+	{{range .ExtraInterfaces}}if svc, ok := client.{{.Name}}.(kitservice.Service); ok {
+		ep, err := svc.Endpoint(method)
+		if err == nil {
+			return ep, nil
+		}
+	}
+	{{end}}
+
+	return nil, ErrMethodNotFound
 }
 
 {{range .Methods}}
