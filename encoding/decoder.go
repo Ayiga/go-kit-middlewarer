@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"golang.org/x/net/context"
+
 	httptransport "github.com/go-kit/kit/transport/http"
 )
 
@@ -23,7 +25,7 @@ type GenerateDecoder func(io.Reader) Decoder
 // request interface type, and a GenerateDecoder, and ultimately returns a
 // function that can decode the given request.
 func MakeRequestDecoder(request interface{}, gen GenerateDecoder) httptransport.DecodeRequestFunc {
-	return func(r *http.Request) (interface{}, error) {
+	return func(ctx context.Context, r *http.Request) (interface{}, error) {
 		if err := gen(r.Body).Decode(request); err != nil {
 			return nil, err
 		}
@@ -35,7 +37,7 @@ func MakeRequestDecoder(request interface{}, gen GenerateDecoder) httptransport.
 // response interface type, and a GenerateDecoder, and ultimately returns a
 // function that can decode a given Response.
 func MakeResponseDecoder(response interface{}, gen GenerateDecoder) httptransport.DecodeResponseFunc {
-	return func(r *http.Response) (interface{}, error) {
+	return func(ctx context.Context, r *http.Response) (interface{}, error) {
 		if r.StatusCode < 200 || r.StatusCode > 299 {
 			// I'm assuming we have an error at this point, and we should
 			// represent it as such.

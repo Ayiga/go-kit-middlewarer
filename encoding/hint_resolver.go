@@ -2,10 +2,13 @@ package encoding
 
 import (
 	"bytes"
-	httptransport "github.com/go-kit/kit/transport/http"
 	"io"
 	"io/ioutil"
 	"net/http"
+
+	"golang.org/x/net/context"
+
+	httptransport "github.com/go-kit/kit/transport/http"
 )
 
 func copyRequestToBuf(r *http.Request) ([]byte, error) {
@@ -42,14 +45,14 @@ type hintResolver int
 
 // EncodeRequest does not implement RequestResponseEncoding
 func (hintResolver) EncodeRequest() httptransport.EncodeRequestFunc {
-	return func(r *http.Request, request interface{}) error {
+	return func(ctx context.Context, r *http.Request, request interface{}) error {
 		return ErrNotImplemented
 	}
 }
 
 // DecodeRequest implements RequestResponseEncoding
 func (hintResolver) DecodeRequest(request interface{}) httptransport.DecodeRequestFunc {
-	return func(r *http.Request) (interface{}, error) {
+	return func(ctx context.Context, r *http.Request) (interface{}, error) {
 		byts, err := copyRequestToBuf(r)
 		if err != nil {
 			return request, err
@@ -71,7 +74,7 @@ func (hintResolver) DecodeRequest(request interface{}) httptransport.DecodeReque
 
 					r.Body = ioutil.NopCloser(bytes.NewBuffer(byts))
 
-					if _, err = encoding.DecodeRequest(request)(r); err != nil {
+					if _, err = encoding.DecodeRequest(request)(ctx, r); err != nil {
 						// encoding failed... let's retry
 						break
 					}
@@ -97,7 +100,7 @@ func (hintResolver) DecodeRequest(request interface{}) httptransport.DecodeReque
 
 			r.Body = ioutil.NopCloser(bytes.NewBuffer(byts))
 
-			if _, err = encoding.DecodeRequest(request)(r); err != nil {
+			if _, err = encoding.DecodeRequest(request)(ctx, r); err != nil {
 				continue
 			}
 
@@ -118,14 +121,14 @@ func (hintResolver) DecodeRequest(request interface{}) httptransport.DecodeReque
 
 // EncodeResponse does not implement RequestResponseEncoding
 func (hintResolver) EncodeResponse() httptransport.EncodeResponseFunc {
-	return func(w http.ResponseWriter, response interface{}) error {
+	return func(ctx context.Context, w http.ResponseWriter, response interface{}) error {
 		return ErrNotImplemented
 	}
 }
 
 // DecodeResponse implements RequestResponseEncoding
 func (hintResolver) DecodeResponse(response interface{}) httptransport.DecodeResponseFunc {
-	return func(r *http.Response) (interface{}, error) {
+	return func(ctx context.Context, r *http.Response) (interface{}, error) {
 		byts, err := copyResponseToBuf(r)
 		if err != nil {
 			return response, err
@@ -148,7 +151,7 @@ func (hintResolver) DecodeResponse(response interface{}) httptransport.DecodeRes
 
 					r.Body = ioutil.NopCloser(bytes.NewBuffer(byts))
 
-					if _, err = encoding.DecodeResponse(response)(r); err != nil {
+					if _, err = encoding.DecodeResponse(response)(ctx, r); err != nil {
 						// encoding failed... let's retry
 						break
 					}
@@ -166,7 +169,7 @@ func (hintResolver) DecodeResponse(response interface{}) httptransport.DecodeRes
 
 			r.Body = ioutil.NopCloser(bytes.NewBuffer(byts))
 
-			if _, err = encoding.DecodeResponse(response)(r); err != nil {
+			if _, err = encoding.DecodeResponse(response)(ctx, r); err != nil {
 				// error decoding, it's likely not this mime type.
 				continue
 			}

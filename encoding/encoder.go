@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"golang.org/x/net/context"
+
 	httptransport "github.com/go-kit/kit/transport/http"
 )
 
@@ -24,7 +26,7 @@ type GenerateEncoder func(w io.Writer) Encoder
 // MakeRequestEncoder takes a GenerateEncoder and returns an
 // httptransport.EncodeRequestFunc
 func MakeRequestEncoder(gen GenerateEncoder) httptransport.EncodeRequestFunc {
-	return func(r *http.Request, request interface{}) error {
+	return func(ctx context.Context, r *http.Request, request interface{}) error {
 		var buf bytes.Buffer
 		err := gen(&buf).Encode(request)
 		r.Body = ioutil.NopCloser(&buf)
@@ -35,7 +37,7 @@ func MakeRequestEncoder(gen GenerateEncoder) httptransport.EncodeRequestFunc {
 // MakeResponseEncoder takes a GenerateEncoder and returns an
 // httpstransport.EncodeResponseFunc
 func MakeResponseEncoder(gen GenerateEncoder) httptransport.EncodeResponseFunc {
-	return func(w http.ResponseWriter, response interface{}) error {
+	return func(ctx context.Context, w http.ResponseWriter, response interface{}) error {
 		if e, ok := response.(error); ok {
 			// we have an error, we'll wrap it, to ensure it's transmission
 			// encode-ability

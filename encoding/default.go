@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	"golang.org/x/net/context"
+
 	httptransport "github.com/go-kit/kit/transport/http"
 )
 
@@ -112,15 +114,15 @@ func getFromEmbededMime(em EmbededMime) (mime string, encoding RequestResponseEn
 	return "", nil, ErrMimeNotSpecified
 }
 
-func encodeRequest(mime string, encoding RequestResponseEncoding, r *http.Request, request interface{}) error {
+func encodeRequest(mime string, ctx context.Context, encoding RequestResponseEncoding, r *http.Request, request interface{}) error {
 	r.Header.Set("Content-Type", mime)
 	r.Header.Set("Accept", mime)
-	return encoding.EncodeRequest()(r, request)
+	return encoding.EncodeRequest()(ctx, r, request)
 }
 
-func encodeResponse(mime string, encoding RequestResponseEncoding, w http.ResponseWriter, response interface{}) error {
+func encodeResponse(mime string, ctx context.Context, encoding RequestResponseEncoding, w http.ResponseWriter, response interface{}) error {
 	w.Header().Set("Content-Type", mime)
-	return encoding.EncodeResponse()(w, response)
+	return encoding.EncodeResponse()(ctx, w, response)
 }
 
 func transferMimeDetails(em EmbededMime, ct contentTypeValue, accept acceptContentHeader) {
@@ -137,10 +139,10 @@ func transferMimeDetails(em EmbededMime, ct contentTypeValue, accept acceptConte
 
 // EncodeRequest implements RequestResponseEncoding
 func (def) EncodeRequest() httptransport.EncodeRequestFunc {
-	return func(r *http.Request, request interface{}) error {
+	return func(ctx context.Context, r *http.Request, request interface{}) error {
 		if em, ok := request.(EmbededMime); ok {
 			if mime, encoding, err := getFromEmbededMime(em); err == nil {
-				return encodeRequest(mime, encoding, r, request)
+				return encodeRequest(mime, ctx, encoding, r, request)
 			}
 		}
 
@@ -152,38 +154,38 @@ func (def) EncodeRequest() httptransport.EncodeRequestFunc {
 			return err
 		}
 
-		return encodeRequest(DefaultEncoding, encoding, r, request)
+		return encodeRequest(DefaultEncoding, ctx, encoding, r, request)
 	}
 }
 
 // DecodeRequest implements RequestResponseEncoding
 func (def) DecodeRequest(request interface{}) httptransport.DecodeRequestFunc {
-	return func(r *http.Request) (interface{}, error) {
+	return func(ctx context.Context, r *http.Request) (interface{}, error) {
 		ct := parseContentType(r.Header.Get("Content-Type"))
 		accept := parseAccept(r.Header.Get("Accept"))
 
 		if ct.contentType == "" {
 			// let's try to guess the type based on the request
-			return hintResolver(0).DecodeRequest(request)(r)
+			return hintResolver(0).DecodeRequest(request)(ctx, r)
 		} else if encoding, err := Get(ct.contentType); err == nil {
 			if em, ok := request.(EmbededMime); ok {
 				transferMimeDetails(em, ct, accept)
 			}
 
-			return encoding.DecodeRequest(request)(r)
+			return encoding.DecodeRequest(request)(ctx, r)
 		}
 
 		// let's try to guess the type based on the request
-		return hintResolver(0).DecodeRequest(request)(r)
+		return hintResolver(0).DecodeRequest(request)(ctx, r)
 	}
 }
 
 // EncodeResponse implements RequestResponseEncoding
 func (def) EncodeResponse() httptransport.EncodeResponseFunc {
-	return func(w http.ResponseWriter, response interface{}) error {
+	return func(ctx context.Context, w http.ResponseWriter, response interface{}) error {
 		if em, ok := response.(EmbededMime); ok {
 			if mime, encoding, err := getFromEmbededMime(em); err == nil {
-				return encodeResponse(mime, encoding, w, response)
+				return encodeResponse(mime, ctx, encoding, w, response)
 			}
 		}
 
@@ -196,20 +198,20 @@ func (def) EncodeResponse() httptransport.EncodeResponseFunc {
 
 		}
 
-		return encodeResponse(DefaultEncoding, encoding, w, response)
+		return encodeResponse(DefaultEncoding, ctx, encoding, w, response)
 	}
 }
 
 // DecodeResponse implements RequestResponseEncoding
 func (def) DecodeResponse(response interface{}) httptransport.DecodeResponseFunc {
-	return func(r *http.Response) (interface{}, error) {
+	return func(ctx context.Context, r *http.Response) (interface{}, error) {
 		ct := parseContentType(r.Header.Get("Content-Type"))
 		if ct.contentType == "" {
 			// fall back
 			// let's try to guess the type based on the response
-			return hintResolver(0).DecodeResponse(response)(r)
+			return hintResolver(0).DecodeResponse(response)(ctx, r)
 		} else if encoding, err := Get(ct.contentType); err == nil {
-			return encoding.DecodeResponse(response)(r)
+			return encoding.DecodeResponse(response)(ctx, r)
 		} else if r.StatusCode < 200 || r.StatusCode > 299 {
 			if ct.contentType == "text/plain" {
 				// ok, this is just a simple plain text document, there's not
@@ -226,10 +228,10 @@ func (def) DecodeResponse(response interface{}) httptransport.DecodeResponseFunc
 			}
 
 			var we WrapperError
-			return hintResolver(0).DecodeResponse(&we)(r)
+			return hintResolver(0).DecodeResponse(&we)(ctx, r)
 		}
 
 		// let's try to guess the type based on the response
-		return hintResolver(0).DecodeResponse(response)(r)
+		return hintResolver(0).DecodeResponse(response)(ctx, r)
 	}
 }
