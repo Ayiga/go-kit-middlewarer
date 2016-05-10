@@ -8,6 +8,8 @@ package http
 import (
 	"net/http"
 
+	"golang.org/x/net/context"
+
 	"github.com/ayiga/go-kit-middlewarer/encoding"
 
 	{{range .Imports}}{{.}}
@@ -50,27 +52,27 @@ type {{.MethodNameLcase}}Response struct {
 }
 
 // decode{{.MethodName}}Request creates a decoder for {{.BasePackage}}.{{.InterfaceName}}.{{.MethodName}}
-func decode{{.MethodName}}Request(r *http.Request) (interface{}, error) {
+func decode{{.MethodName}}Request(ctx context.Context, r *http.Request) (interface{}, error) {
 	req := new({{.MethodNameLcase}}Request)
 	req.embedMime = new(embedMime)
-	return encoding.Default().DecodeRequest(req)(r)
+	return encoding.Default().DecodeRequest(req)(ctx, r)
 }
 
 // decode{{.MethodName}}Response creates a decoder for {{.BasePackage}}.{{.InterfaceName}}.{{.MethodName}}
-func decode{{.MethodName}}Response(r *http.Response) (interface{}, error) {
+func decode{{.MethodName}}Response(ctx context.Context, r *http.Response) (interface{}, error) {
 	req := new({{.MethodNameLcase}}Response)
 	req.embedMime = new(embedMime)
-	return encoding.Default().DecodeResponse(req)(r)
+	return encoding.Default().DecodeResponse(req)(ctx, r)
 }
 
 // encode{{.MethodName}}Request creates an encoder for {{.BasePackage}}.{{.InterfaceName}}.{{.MethodName}}
-func encode{{.MethodName}}Request (r *http.Request, request interface{}) error {
-	return encoding.Default().EncodeRequest()(r,request)
+func encode{{.MethodName}}Request (ctx context.Context, r *http.Request, request interface{}) error {
+	return encoding.Default().EncodeRequest()(ctx, r, request)
 }
 
 // encode{{.MethodName}}Response creates an encoder for {{.BasePackage}}.{{.InterfaceName}}.{{.MethodName}}
-func encode{{.MethodName}}Response (w http.ResponseWriter, response interface{}) error {
-	return encoding.Default().EncodeResponse()(w,response)
+func encode{{.MethodName}}Response (ctx context.Context, w http.ResponseWriter, response interface{}) error {
+	return encoding.Default().EncodeResponse()(ctx, w, response)
 }
 
 {{end}}
