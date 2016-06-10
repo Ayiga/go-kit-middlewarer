@@ -10,7 +10,8 @@ import (
 	{{range .ExtraImports}}
 	{{.}}{{end}}
 
-	kitloadbalancer "github.com/go-kit/kit/loadbalancer"
+	kitsd "github.com/go-kit/kit/sd"
+	kitloadbalancer "github.com/go-kit/kit/sd/lb"
 	httptransport "github.com/go-kit/kit/transport/http"
 	kitendpoint "github.com/go-kit/kit/endpoint"
 
@@ -25,7 +26,7 @@ var LoadBalancerRetryCount = 3
 // endpointFromLoadBalancer is a nice helper function that will pull an endpoint
 // off of a load balancer and initiate the request.  However, if an error is
 // encountered, it will handle it instead.
-func endpointFromLoadBalancer( lb kitloadbalancer.LoadBalancer ) kitendpoint.Endpoint {
+func endpointFromLoadBalancer( lb kitloadbalancer.Balancer ) kitendpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		var ep kitendpoint.Endpoint
 		var err error
@@ -48,7 +49,7 @@ func endpointFromLoadBalancer( lb kitloadbalancer.LoadBalancer ) kitendpoint.End
 // GetLoadBalancerFunc describes a function which takes a
 // github.com/go-kit/kit/loadbalancer.LoadBalancer and returns a
 // github.com/go-kit/kit/loadbalancer.LoadBalancer
-type GetLoadBalancerFunc func( kitloadbalancer.Factory ) kitloadbalancer.LoadBalancer
+type GetLoadBalancerFunc func( kitsd.Factory ) kitloadbalancer.Balancer
 
 // NewHTTPLoadBalancedClient is a function that will return a Load balanced
 // client based on the load balancing conversion function provided.

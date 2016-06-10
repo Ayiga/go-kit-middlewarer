@@ -14,7 +14,7 @@ import (
 
 	kitendpoint "github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
-	kitloadbalancer "github.com/go-kit/kit/loadbalancer"
+	kitsd "github.com/go-kit/kit/sd"
 
 	"{{.EndpointPackage}}"
 	{{.BasePackageImport}}
@@ -28,7 +28,7 @@ type HTTPClientLayer func( addr, path string ) kitendpoint.Middleware
 
 // httpFactory will take a path, encoding function, decoding function, and a
 // slice of github.com/go-kit/kit/transport/http.ClientOption(s)
-func httpFactory( path string, enc httptransport.EncodeRequestFunc, dec httptransport.DecodeResponseFunc, clientLayers []HTTPClientLayer, options []httptransport.ClientOption ) kitloadbalancer.Factory {
+func httpFactory( path string, enc httptransport.EncodeRequestFunc, dec httptransport.DecodeResponseFunc, clientLayers []HTTPClientLayer, options []httptransport.ClientOption ) kitsd.Factory {
 	return func(addr string) (kitendpoint.Endpoint, io.Closer, error) {
 		// first we need to ensure that the address given (addr) is valid.
 		if !strings.HasPrefix(addr, "http") {
