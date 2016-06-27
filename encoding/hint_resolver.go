@@ -2,6 +2,7 @@ package encoding
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -10,6 +11,8 @@ import (
 
 	httptransport "github.com/go-kit/kit/transport/http"
 )
+
+var ErrEmptyRequest = errors.New("Empty Request, nothing to sniff")
 
 func copyRequestToBuf(r *http.Request) ([]byte, error) {
 	buf := new(bytes.Buffer)
@@ -56,6 +59,11 @@ func (hintResolver) DecodeRequest(request interface{}) httptransport.DecodeReque
 		byts, err := copyRequestToBuf(r)
 		if err != nil {
 			return request, err
+		}
+
+		if len(byts) <= 0 {
+			// we have an issue, nothing to detect
+			return request, ErrEmptyRequest
 		}
 
 		rune1 := []rune(string(byts))[0]
