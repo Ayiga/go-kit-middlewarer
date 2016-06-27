@@ -49,3 +49,11 @@ func MakeResponseEncoder(gen GenerateEncoder) httptransport.EncodeResponseFunc {
 		return gen(w).Encode(response)
 	}
 }
+
+// MakeErrorEncoder will take a generic GenerateEncoder function and will
+// return an ErrorEncoder
+func MakeErrorEncoder(gen RequestResponseEncoding) httptransport.ErrorEncoder {
+	return func(ctx context.Context, err error, w http.ResponseWriter ) {
+		gen.EncodeResponse()(ctx,w,err)
+	}
+}
