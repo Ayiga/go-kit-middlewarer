@@ -35,7 +35,9 @@ type client{{.InterfaceName}} struct {
 // {{.MethodName}} implements {{.BasePackage}}.{{.InterfaceName}}
 func ({{.LocalName}} client{{.InterfaceName}}) {{.MethodName}}({{.MethodArguments}}) ({{.MethodResults}}) {
 	{{if .HasContextParam}}
-	{{.ContextParamName}}, _ = context.WithTimeout({{.ContextParamName}}, DefaultRequestTimeout)
+	if _, ok := {{.ContextParamName}}.Deadline(); !ok {
+		{{.ContextParamName}}, _ = context.WithTimeout({{.ContextParamName}}, DefaultRequestTimeout)
+	}
 	{{else}}
 	{{.ContextParamName}}, _ := context.WithTimeout(context.Background(), DefaultRequestTimeout)
 	{{end}}
