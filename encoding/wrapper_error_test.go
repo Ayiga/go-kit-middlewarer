@@ -9,16 +9,20 @@ import (
 	"reflect"
 	"testing"
 
+	"golang.org/x/net/context"
+
 	"github.com/ayiga/go-kit-middlewarer/encoding"
+	kithttptransport "github.com/go-kit/kit/transport/http"
 )
 
 func TestDecodeErrorJSON(t *testing.T) {
 	buf := new(bytes.Buffer)
 	rw := createResponseWriter(buf)
+	ctx := context.Background()
 
 	// server error...
 	rw.WriteHeader(500)
-	err := encoding.JSON(0).EncodeResponse()(rw, http.ErrContentLength)
+	err := encoding.JSON(0).EncodeResponse()(ctx, rw, http.ErrContentLength)
 	if err != nil {
 		t.Fatalf("Unable to Encode Response: %s", err)
 	}
@@ -32,7 +36,7 @@ func TestDecodeErrorJSON(t *testing.T) {
 	ro.Header.Set("Content-Type", "application/json")
 
 	resp := new(request)
-	r, err := encoding.Default().DecodeResponse(resp)(ro)
+	r, err := encoding.Default().DecodeResponse(resp)(ctx, ro)
 	if err != nil {
 		t.Fatalf("Unable to Decode Response: %s", err)
 	}
@@ -58,10 +62,11 @@ func TestDecodeErrorJSON(t *testing.T) {
 func TestDecodeErrorXML(t *testing.T) {
 	buf := new(bytes.Buffer)
 	rw := createResponseWriter(buf)
+	ctx := context.Background()
 
 	// server error...
 	rw.WriteHeader(500)
-	err := encoding.XML(0).EncodeResponse()(rw, http.ErrContentLength)
+	err := encoding.XML(0).EncodeResponse()(ctx, rw, http.ErrContentLength)
 	if err != nil {
 		t.Fatalf("Unable to Encode Response: %s", err)
 	}
@@ -75,7 +80,7 @@ func TestDecodeErrorXML(t *testing.T) {
 	ro.Header.Set("Content-Type", "application/xml")
 
 	resp := new(request)
-	r, err := encoding.Default().DecodeResponse(resp)(ro)
+	r, err := encoding.Default().DecodeResponse(resp)(ctx, ro)
 	if err != nil {
 		t.Fatalf("Unable to Decode Response: %s", err)
 	}
@@ -101,10 +106,11 @@ func TestDecodeErrorXML(t *testing.T) {
 func TestDecodeErrorGob(t *testing.T) {
 	buf := new(bytes.Buffer)
 	rw := createResponseWriter(buf)
+	ctx := context.Background()
 
 	// server error...
 	rw.WriteHeader(500)
-	err := encoding.Gob(0).EncodeResponse()(rw, http.ErrContentLength)
+	err := encoding.Gob(0).EncodeResponse()(ctx, rw, http.ErrContentLength)
 	if err != nil {
 		t.Fatalf("Unable to Encode Response: %s", err)
 	}
@@ -118,7 +124,7 @@ func TestDecodeErrorGob(t *testing.T) {
 	ro.Header.Set("Content-Type", "application/gob")
 
 	resp := new(request)
-	r, err := encoding.Default().DecodeResponse(resp)(ro)
+	r, err := encoding.Default().DecodeResponse(resp)(ctx, ro)
 	if err != nil {
 		t.Fatalf("Unable to Decode Response: %s", err)
 	}
@@ -158,6 +164,7 @@ func init() {
 func TestDecodeCustomDecodableErrorJSON(t *testing.T) {
 	buf := new(bytes.Buffer)
 	rw := createResponseWriter(buf)
+	ctx := context.Background()
 
 	testErr := CustomDecodableError{
 		Code:   50,
@@ -166,7 +173,7 @@ func TestDecodeCustomDecodableErrorJSON(t *testing.T) {
 
 	// server error...
 	rw.WriteHeader(500)
-	err := encoding.JSON(0).EncodeResponse()(rw, &testErr)
+	err := encoding.JSON(0).EncodeResponse()(ctx, rw, &testErr)
 	if err != nil {
 		t.Fatalf("Unable to Encode Response: %s", err)
 	}
@@ -180,7 +187,7 @@ func TestDecodeCustomDecodableErrorJSON(t *testing.T) {
 	ro.Header.Set("Content-Type", "application/json")
 
 	resp := new(request)
-	r, err := encoding.Default().DecodeResponse(resp)(ro)
+	r, err := encoding.Default().DecodeResponse(resp)(ctx, ro)
 	if err != nil {
 		t.Fatalf("Unable to Decode Response: %s", err)
 	}
@@ -211,6 +218,7 @@ func TestDecodeCustomDecodableErrorJSON(t *testing.T) {
 func TestDecodeCustomDecodableErrorXML(t *testing.T) {
 	buf := new(bytes.Buffer)
 	rw := createResponseWriter(buf)
+	ctx := context.Background()
 
 	testErr := CustomDecodableError{
 		Code:   50,
@@ -219,7 +227,7 @@ func TestDecodeCustomDecodableErrorXML(t *testing.T) {
 
 	// server error...
 	rw.WriteHeader(500)
-	err := encoding.XML(0).EncodeResponse()(rw, &testErr)
+	err := encoding.XML(0).EncodeResponse()(ctx, rw, &testErr)
 	if err != nil {
 		t.Fatalf("Unable to Encode Response: %s", err)
 	}
@@ -233,7 +241,7 @@ func TestDecodeCustomDecodableErrorXML(t *testing.T) {
 	ro.Header.Set("Content-Type", "application/xml")
 
 	resp := new(request)
-	r, err := encoding.Default().DecodeResponse(resp)(ro)
+	r, err := encoding.Default().DecodeResponse(resp)(ctx, ro)
 	if err != nil {
 		t.Fatalf("Unable to Decode Response: %s", err)
 	}
@@ -264,6 +272,7 @@ func TestDecodeCustomDecodableErrorXML(t *testing.T) {
 func TestDecodeCustomDecodableErrorGob(t *testing.T) {
 	buf := new(bytes.Buffer)
 	rw := createResponseWriter(buf)
+	ctx := context.Background()
 
 	testErr := CustomDecodableError{
 		Code:   50,
@@ -272,7 +281,7 @@ func TestDecodeCustomDecodableErrorGob(t *testing.T) {
 
 	// server error...
 	rw.WriteHeader(500)
-	err := encoding.Gob(0).EncodeResponse()(rw, &testErr)
+	err := encoding.Gob(0).EncodeResponse()(ctx, rw, &testErr)
 	if err != nil {
 		t.Fatalf("Unable to Encode Response: %s", err)
 	}
@@ -286,7 +295,7 @@ func TestDecodeCustomDecodableErrorGob(t *testing.T) {
 	ro.Header.Set("Content-Type", "application/gob")
 
 	resp := new(request)
-	r, err := encoding.Default().DecodeResponse(resp)(ro)
+	r, err := encoding.Default().DecodeResponse(resp)(ctx, ro)
 	if err != nil {
 		t.Fatalf("Unable to Decode Response: %s", err)
 	}
@@ -310,6 +319,146 @@ func TestDecodeCustomDecodableErrorGob(t *testing.T) {
 	}
 
 	if got, want := castErr.Reason, testErr.Reason; got != want {
+		t.Errorf("castErr.Reason:\ngot:\n\t%s\nwant:\n\t%s", got, want)
+	}
+}
+
+func TestEncodeDecodeHTTPErrorJSON(t *testing.T) {
+	buf := new(bytes.Buffer)
+	rw := createResponseWriter(buf)
+	ctx := context.Background()
+	testErr := kithttptransport.Error{
+		Domain: kithttptransport.DomainDo,
+		Err: CustomDecodableError{
+			Code:   50,
+			Reason: "Halp",
+		},
+	}
+
+	// server error...
+	rw.WriteHeader(500)
+	err := encoding.JSON(0).EncodeResponse()(ctx, rw, testErr)
+	if err != nil {
+		t.Fatalf("Unable to Encode Response: %s", err)
+	}
+
+	t.Logf("Body Content: %s", buf.String())
+
+	ro := new(http.Response)
+	ro.StatusCode = rw.statusCode
+	ro.Body = ioutil.NopCloser(buf)
+	ro.Header = make(http.Header)
+	ro.Header.Set("Content-Type", "application/json")
+
+	resp := new(request)
+	r, err := encoding.Default().DecodeResponse(resp)(ctx, ro)
+	if err != nil {
+		t.Fatalf("Unable to Decode Response: %s", err)
+	}
+
+	t.Logf("Decode Result: %#v", r)
+	if got, want := reflect.TypeOf(r), reflect.TypeOf(testErr); got != want {
+		t.Fatalf("Type Of:\ngot:\n%s\nwant:\n%s", got, want)
+	}
+
+	castErr, ok := r.(kithttptransport.Error)
+	if !ok {
+		t.Fatal("Unable to cast returned response into an error")
+	}
+
+	if got, want := castErr.Error(), testErr.Error(); got != want {
+		t.Errorf(".Error():\ngot:\n\t%s\nwant:\n\t%s", got, want)
+	}
+
+	if got, want := castErr.Domain, testErr.Domain; got != want {
+		t.Errorf("castErr.Domain:\ngot:\n\t%d\nwant:\n\t%d", got, want)
+	}
+
+	subErr1 := testErr.Err.(CustomDecodableError)
+	subErr2, ok := castErr.Err.(CustomDecodableError)
+	if !ok {
+		t.Fatalf("Unable to cast sub error of returned response into an error")
+	}
+
+	if got, want := subErr2.Error(), subErr1.Error(); got != want {
+		t.Errorf(".Error():\ngot:\n\t%s\nwant:\n\t%s", got, want)
+	}
+
+	if got, want := subErr2.Code, subErr1.Code; got != want {
+		t.Errorf("castErr.Code:\ngot:\n\t%s\nwant:\n\t%s", got, want)
+	}
+
+	if got, want := subErr2.Reason, subErr1.Reason; got != want {
+		t.Errorf("castErr.Reason:\ngot:\n\t%s\nwant:\n\t%s", got, want)
+	}
+}
+
+func TestEncodeDecodeHTTPErrorXML(t *testing.T) {
+	buf := new(bytes.Buffer)
+	rw := createResponseWriter(buf)
+	ctx := context.Background()
+	testErr := kithttptransport.Error{
+		Domain: kithttptransport.DomainDo,
+		Err: CustomDecodableError{
+			Code:   50,
+			Reason: "Halp",
+		},
+	}
+
+	// server error...
+	rw.WriteHeader(500)
+	err := encoding.XML(0).EncodeResponse()(ctx, rw, testErr)
+	if err != nil {
+		t.Fatalf("Unable to Encode Response: %s", err)
+	}
+
+	t.Logf("Body Content: %s", buf.String())
+
+	ro := new(http.Response)
+	ro.StatusCode = rw.statusCode
+	ro.Body = ioutil.NopCloser(buf)
+	ro.Header = make(http.Header)
+	ro.Header.Set("Content-Type", "application/xml")
+
+	resp := new(request)
+	r, err := encoding.Default().DecodeResponse(resp)(ctx, ro)
+	if err != nil {
+		t.Fatalf("Unable to Decode Response: %s", err)
+	}
+
+	t.Logf("Decode Result: %#v", r)
+	if got, want := reflect.TypeOf(r), reflect.TypeOf(testErr); got != want {
+		t.Fatalf("Type Of:\ngot:\n%s\nwant:\n%s", got, want)
+	}
+
+	castErr, ok := r.(kithttptransport.Error)
+	if !ok {
+		t.Fatal("Unable to cast returned response into an error")
+	}
+
+	if got, want := castErr.Error(), testErr.Error(); got != want {
+		t.Errorf(".Error():\ngot:\n\t%s\nwant:\n\t%s", got, want)
+	}
+
+	if got, want := castErr.Domain, testErr.Domain; got != want {
+		t.Errorf("castErr.Domain:\ngot:\n\t%d\nwant:\n\t%d", got, want)
+	}
+
+	subErr1 := testErr.Err.(CustomDecodableError)
+	subErr2, ok := castErr.Err.(CustomDecodableError)
+	if !ok {
+		t.Fatalf("Unable to cast sub error of returned response into an error")
+	}
+
+	if got, want := subErr2.Error(), subErr1.Error(); got != want {
+		t.Errorf(".Error():\ngot:\n\t%s\nwant:\n\t%s", got, want)
+	}
+
+	if got, want := subErr2.Code, subErr1.Code; got != want {
+		t.Errorf("castErr.Code:\ngot:\n\t%s\nwant:\n\t%s", got, want)
+	}
+
+	if got, want := subErr2.Reason, subErr1.Reason; got != want {
 		t.Errorf("castErr.Reason:\ngot:\n\t%s\nwant:\n\t%s", got, want)
 	}
 }

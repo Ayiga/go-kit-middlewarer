@@ -8,12 +8,14 @@ import (
 	"net/http"
 	"testing"
 
+	"golang.org/x/net/context"
+
 	"github.com/ayiga/go-kit-middlewarer/encoding"
 )
 
 func TestDefaultErrorEncodingDecode(t *testing.T) {
 	testError := errors.New("this is some sort of error")
-
+	ctx := context.Background()
 	buf := bytes.NewBuffer([]byte(testError.Error()))
 	ro := new(http.Response)
 	ro.StatusCode = 500
@@ -23,7 +25,7 @@ func TestDefaultErrorEncodingDecode(t *testing.T) {
 	ro.Header.Set("Content-Length", fmt.Sprintf("%d", buf.Len()))
 
 	resp := new(request)
-	r, err := encoding.Default().DecodeResponse(resp)(ro)
+	r, err := encoding.Default().DecodeResponse(resp)(ctx, ro)
 	if err != nil {
 		t.Fatalf("Unable to Decode Response: %s", err)
 	}
@@ -44,7 +46,7 @@ func TestDefaultErrorEncodingDecode(t *testing.T) {
 
 func TestDefaultErrorEncodingDecodeWithDefinitiveTypeDecoder(t *testing.T) {
 	testError := errors.New("this is some sort of error")
-
+	ctx := context.Background()
 	buf := bytes.NewBuffer([]byte(testError.Error()))
 	ro := new(http.Response)
 	ro.StatusCode = 500
@@ -54,7 +56,7 @@ func TestDefaultErrorEncodingDecodeWithDefinitiveTypeDecoder(t *testing.T) {
 	ro.Header.Set("Content-Length", fmt.Sprintf("%d", buf.Len()))
 
 	resp := new(request)
-	r, err := encoding.JSON(0).DecodeResponse(resp)(ro)
+	r, err := encoding.JSON(0).DecodeResponse(resp)(ctx, ro)
 	if err != nil {
 		t.Fatalf("Unable to Decode Response: %s", err)
 	}

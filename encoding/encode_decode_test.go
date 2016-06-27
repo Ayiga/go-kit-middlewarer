@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"golang.org/x/net/context"
+
 	"github.com/ayiga/go-kit-middlewarer/encoding"
 
 	"testing"
@@ -18,6 +20,7 @@ func TestJSONEncodeDecodeRequest(t *testing.T) {
 		Bool: true,
 		Null: false,
 	}
+	ctx := context.Background()
 	req.embedMime = new(embedMime)
 	req.SetMime("application/json")
 
@@ -26,7 +29,7 @@ func TestJSONEncodeDecodeRequest(t *testing.T) {
 		panic(err)
 	}
 
-	err = encoding.Default().EncodeRequest()(ri, req)
+	err = encoding.Default().EncodeRequest()(ctx, ri, req)
 	if err != nil {
 		t.Log("Error Encoding Request: %s\n", err)
 		t.Fail()
@@ -38,7 +41,7 @@ func TestJSONEncodeDecodeRequest(t *testing.T) {
 	resp := new(request)
 	resp.embedMime = new(embedMime)
 
-	_, err = encoding.Default().DecodeRequest(resp)(ri)
+	_, err = encoding.Default().DecodeRequest(resp)(ctx, ri)
 
 	str := "{\"str\":\"foo\",\"num\":1.5,\"bool\":true,\"null\":false}\n" // trailing new-line?
 	if s := buf.String(); s != str {
@@ -79,6 +82,8 @@ func TestXMLEncodeDecodeRequest(t *testing.T) {
 		Bool: true,
 		Null: nil,
 	}
+	ctx := context.Background()
+
 	req.embedMime = new(embedMime)
 	req.SetMime("application/xml")
 
@@ -87,7 +92,7 @@ func TestXMLEncodeDecodeRequest(t *testing.T) {
 		panic(err)
 	}
 
-	err = encoding.Default().EncodeRequest()(ri, req)
+	err = encoding.Default().EncodeRequest()(ctx, ri, req)
 	if err != nil {
 		t.Log("Error Encoding Request: %s\n", err)
 		t.Fail()
@@ -99,7 +104,7 @@ func TestXMLEncodeDecodeRequest(t *testing.T) {
 	resp := new(request)
 	resp.embedMime = new(embedMime)
 
-	_, err = encoding.Default().DecodeRequest(resp)(ri)
+	_, err = encoding.Default().DecodeRequest(resp)(ctx, ri)
 
 	str := "<request><str>foo</str><num>1.5</num><bool>true</bool></request>"
 	if s := buf.String(); s != str {
@@ -140,6 +145,7 @@ func TestGobEncodeDecodeRequest(t *testing.T) {
 		Bool: true,
 		Null: nil,
 	}
+	ctx := context.Background()
 	req.embedMime = new(embedMime)
 	req.SetMime("application/xml")
 
@@ -148,7 +154,7 @@ func TestGobEncodeDecodeRequest(t *testing.T) {
 		panic(err)
 	}
 
-	err = encoding.Default().EncodeRequest()(ri, req)
+	err = encoding.Default().EncodeRequest()(ctx, ri, req)
 	if err != nil {
 		t.Log("Error Encoding Request: %s\n", err)
 		t.Fail()
@@ -160,7 +166,7 @@ func TestGobEncodeDecodeRequest(t *testing.T) {
 	resp := new(request)
 	resp.embedMime = new(embedMime)
 
-	_, err = encoding.Default().DecodeRequest(resp)(ri)
+	_, err = encoding.Default().DecodeRequest(resp)(ctx, ri)
 
 	byts := []byte{0x3c, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x3e,
 		0x3c, 0x73, 0x74, 0x72, 0x3e, 0x66, 0x6f, 0x6f, 0x3c,
@@ -218,13 +224,14 @@ func TestXMLEncodeDecodeResponse(t *testing.T) {
 		Bool: true,
 		Null: nil,
 	}
+	ctx := context.Background()
 	req.embedMime = new(embedMime)
 	req.SetMime("application/xml")
 
 	buf := new(bytes.Buffer)
 	ri := createResponseWriter(buf)
 
-	err := encoding.Default().EncodeResponse()(ri, req)
+	err := encoding.Default().EncodeResponse()(ctx, ri, req)
 	if err != nil {
 		t.Log("Error Encoding Request: %s\n", err)
 		t.Fail()
@@ -245,7 +252,7 @@ func TestXMLEncodeDecodeResponse(t *testing.T) {
 		t.Fail()
 	}
 
-	_, err = encoding.Default().DecodeResponse(resp)(ro)
+	_, err = encoding.Default().DecodeResponse(resp)(ctx, ro)
 
 	if err != nil {
 		t.Logf("Request Decode Failed: %s\n", err)
@@ -280,13 +287,14 @@ func TestGobEncodeDecodeResponse(t *testing.T) {
 		Bool: true,
 		Null: false,
 	}
+	ctx := context.Background()
 	req.embedMime = new(embedMime)
 	req.SetMime("application/gob")
 
 	buf := new(bytes.Buffer)
 	ri := createResponseWriter(buf)
 
-	err := encoding.Default().EncodeResponse()(ri, req)
+	err := encoding.Default().EncodeResponse()(ctx, ri, req)
 	if err != nil {
 		t.Log("Error Encoding Request: %s\n", err)
 		t.Fail()
@@ -325,7 +333,7 @@ func TestGobEncodeDecodeResponse(t *testing.T) {
 		}
 	}
 
-	_, err = encoding.Default().DecodeResponse(resp)(ro)
+	_, err = encoding.Default().DecodeResponse(resp)(ctx, ro)
 
 	if err != nil {
 		t.Logf("Request Decode Failed: %s\n", err)

@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"net/http"
 
+	"golang.org/x/net/context"
+
 	"github.com/ayiga/go-kit-middlewarer/encoding"
 
 	"testing"
 )
 
 func TestAcceptParsing1(t *testing.T) {
+	ctx := context.Background()
 	r, err := http.NewRequest("GET", "/not/important", bytes.NewBuffer([]byte(string("{}"))))
 	r.Header.Add("Content-Type", "application/json")
 	r.Header.Add("Accept", "application/xml;q=0.7,application/json;q=0.8,application/gob;q=0.9")
@@ -22,7 +25,7 @@ func TestAcceptParsing1(t *testing.T) {
 
 	def := encoding.Default()
 
-	_, err = def.DecodeRequest(req)(r)
+	_, err = def.DecodeRequest(req)(ctx, r)
 	if err != nil {
 		t.Logf("Decoding Failed: %s\n", err)
 		t.Fail()
@@ -32,5 +35,4 @@ func TestAcceptParsing1(t *testing.T) {
 		t.Logf("mime != \"application/gob\": %s\n", mime)
 		t.Fail()
 	}
-
 }

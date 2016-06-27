@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"golang.org/x/net/context"
+
 	"github.com/ayiga/go-kit-middlewarer/encoding"
 
 	"testing"
@@ -13,6 +15,7 @@ import (
 func TestJSONRequestSniff1(t *testing.T) {
 	var e request
 	e.embedMime = new(embedMime)
+	ctx := context.Background()
 
 	str := "{\"str\":\"bar\",\"num\": 10,\"bool\":true,\"null\":null}"
 	t.Logf("Data: %s\n", str)
@@ -25,7 +28,7 @@ func TestJSONRequestSniff1(t *testing.T) {
 
 	def := encoding.Default()
 
-	e1, err := def.DecodeRequest(&e)(request)
+	e1, err := def.DecodeRequest(&e)(ctx, request)
 	if err != nil {
 		t.Logf("Decode Request Failed: %s\n", err)
 		t.Fail()
@@ -60,6 +63,7 @@ func TestJSONRequestSniff1(t *testing.T) {
 func TestXMLRequestSniff1(t *testing.T) {
 	var e request
 	e.embedMime = new(embedMime)
+	ctx := context.Background()
 
 	str := "<request><str>bar</str><num>10.0</num><bool>true</bool><null>null</null></request>"
 	t.Logf("Data: %s\n", str)
@@ -72,7 +76,7 @@ func TestXMLRequestSniff1(t *testing.T) {
 
 	def := encoding.Default()
 
-	e1, err := def.DecodeRequest(&e)(request)
+	e1, err := def.DecodeRequest(&e)(ctx, request)
 	if err != nil {
 		t.Logf("Decode Request Failed: %s\n", err)
 		t.Fail()
@@ -107,6 +111,7 @@ func TestXMLRequestSniff1(t *testing.T) {
 func TestGobRequestSniff1(t *testing.T) {
 	var e request
 	e.embedMime = new(embedMime)
+	ctx := context.Background()
 
 	b := []byte{0x37, 0xff, 0x81, 0x03, 0x01, 0x01, 0x07, 0x72, 0x65,
 		0x71, 0x75, 0x65, 0x73, 0x74, 0x01, 0xff, 0x82, 0x00,
@@ -125,7 +130,7 @@ func TestGobRequestSniff1(t *testing.T) {
 
 	def := encoding.Default()
 
-	e1, err := def.DecodeRequest(&e)(request)
+	e1, err := def.DecodeRequest(&e)(ctx, request)
 	if err != nil {
 		t.Logf("Decode Request Failed: %s\n", err)
 		t.Fail()
@@ -160,6 +165,7 @@ func TestGobRequestSniff1(t *testing.T) {
 func TestJSONResponseSniff1(t *testing.T) {
 	var e request
 	e.embedMime = new(embedMime)
+	ctx := context.Background()
 
 	response := new(http.Response)
 	response.StatusCode = 200
@@ -174,7 +180,7 @@ func TestJSONResponseSniff1(t *testing.T) {
 
 	def := encoding.Default()
 
-	e1, err := def.DecodeResponse(&e)(response)
+	e1, err := def.DecodeResponse(&e)(ctx, response)
 	if err != nil {
 		t.Logf("Decode Request Failed: %s\n", err)
 		t.Fail()
@@ -209,6 +215,7 @@ func TestJSONResponseSniff1(t *testing.T) {
 func TestXMLResponseSniff1(t *testing.T) {
 	var e request
 	e.embedMime = new(embedMime)
+	ctx := context.Background()
 
 	response := new(http.Response)
 	response.StatusCode = 200
@@ -223,7 +230,7 @@ func TestXMLResponseSniff1(t *testing.T) {
 
 	def := encoding.Default()
 
-	e1, err := def.DecodeResponse(&e)(response)
+	e1, err := def.DecodeResponse(&e)(ctx, response)
 	if err != nil {
 		t.Logf("Decode Request Failed: %s\n", err)
 		t.Fail()
@@ -258,6 +265,7 @@ func TestXMLResponseSniff1(t *testing.T) {
 func TestGobResponseSniff1(t *testing.T) {
 	var e request
 	e.embedMime = new(embedMime)
+	ctx := context.Background()
 
 	response := new(http.Response)
 	response.StatusCode = 200
@@ -278,7 +286,7 @@ func TestGobResponseSniff1(t *testing.T) {
 
 	def := encoding.Default()
 
-	e1, err := def.DecodeResponse(&e)(response)
+	e1, err := def.DecodeResponse(&e)(ctx, response)
 	if err != nil {
 		t.Logf("Decode Request Failed: %s\n", err)
 		t.Fail()
