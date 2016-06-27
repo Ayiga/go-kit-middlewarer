@@ -43,7 +43,7 @@ func MakeResponseEncoder(gen GenerateEncoder) httptransport.EncodeResponseFunc {
 			// encode-ability
 
 			we := WrapError(e)
-			return gen(w).Encode(&we)
+			return gen(w).Encode(we)
 		}
 
 		return gen(w).Encode(response)
