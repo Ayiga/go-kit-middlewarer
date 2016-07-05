@@ -104,7 +104,7 @@ import (
 	"net/http"
 	"strings"
 
-	trans "<.BasePackage>/transport/http"
+	trans "{{.BasePackage}}/transport/http"
 )
 
 type StringService struct{}
