@@ -6,6 +6,11 @@ import (
 	"net/http"
 	"os"
 
+	"golang.org/x/net/context"
+
+	httptrans "github.com/go-kit/kit/transport/http"
+
+	"github.com/ayiga/go-kit-middlewarer/encoding"
 	trans "github.com/ayiga/go-kit-middlewarer/examples/stringsvc/transport/http"
 )
 
@@ -25,6 +30,7 @@ func usage() {
 }
 
 func main() {
+	flag.Usage = usage
 	flag.Parse()
 	a := flag.Args()
 
@@ -36,7 +42,12 @@ func main() {
 	switch mode {
 	case "server":
 		var svc StringService
-		trans.HTTPServersForEndpoints(svc)
+		options := []httptrans.ServerOption{httptrans.ServerErrorEncoder(func(ctx context.Context, err error, w http.ResponseWriter) {
+			w.WriteHeader(500)
+			encoding.JSON(1).EncodeResponse()(ctx, w, err)
+		}),
+		}
+		trans.HTTPServersForEndpointsWithOptions(svc, []trans.ServerLayer{}, options)
 		http.ListenAndServe(args.httpPort, nil)
 	case "client":
 		if len(a) < 3 {
