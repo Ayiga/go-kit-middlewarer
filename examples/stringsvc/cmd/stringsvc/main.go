@@ -2,8 +2,13 @@ package main
 
 import (
 	"net/http"
+	"os"
 	"strings"
 
+	"github.com/go-kit/kit/log"
+
+	"github.com/ayiga/go-kit-middlewarer/examples/stringsvc"
+	"github.com/ayiga/go-kit-middlewarer/examples/stringsvc/logging"
 	trans "github.com/ayiga/go-kit-middlewarer/examples/stringsvc/transport/http"
 )
 
@@ -22,7 +27,9 @@ func (StringService) Count(str string) int {
 }
 
 func main() {
-	var svc StringService
+	var svc stringsvc.StringService = StringService{}
+	l := log.NewLogfmtLogger(os.Stderr)
+	svc = logging.Middleware(l, svc)(svc)
 
 	trans.HTTPServersForEndpoints(svc)
 	http.ListenAndServe(":9000", nil)
