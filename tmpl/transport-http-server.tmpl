@@ -27,7 +27,7 @@ func epID( ep ep.Endpoint ) ep.Endpoint {
 	return ep
 }
 
-func httpServerFactory( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceName}}, wrappers []ServerLayer, options []httptransport.ServerOption, path string, endp toEndpoint, dec httptransport.DecodeRequestFunc, enc httptransport.EncodeResponseFunc) {
+func serverFactory( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceName}}, wrappers []ServerLayer, options []httptransport.ServerOption, path string, endp toEndpoint, dec httptransport.DecodeRequestFunc, enc httptransport.EncodeResponseFunc) {
 	ctx := context.Background()
 	var mappedLayers []ep.Middleware
 	for _, w := range wrappers {
@@ -50,7 +50,7 @@ func httpServerFactory( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.Interfac
 // {{.BasePackage}}.{{.InterfaceName}}
 func HTTPServersForEndpoints( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceName}}, wrappers ...ServerLayer ) {
 	{{range .Methods}}
-	httpServerFactory( {{.InterfaceNameLcase}}, wrappers, nil, {{.EndpointPackageName}}.Path{{.MethodName}}, make{{.MethodName}}Endpoint, decode{{.MethodName}}Request, encode{{.MethodName}}Response ){{end}}
+	serverFactory( {{.InterfaceNameLcase}}, wrappers, nil, {{.EndpointPackageName}}.Path{{.MethodName}}, make{{.MethodName}}Endpoint, decode{{.MethodName}}Request, encode{{.MethodName}}Response ){{end}}
 }
 
 // HTTPServersForEndpointsWithOptions will take the given arguments, associate all of
@@ -58,5 +58,5 @@ func HTTPServersForEndpoints( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.In
 // {{.BasePackage}}.{{.InterfaceName}}
 func HTTPServersForEndpointsWithOptions( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceName}}, wrappers []ServerLayer, options []httptransport.ServerOption ) {
 	{{range .Methods}}
-	httpServerFactory( {{.InterfaceNameLcase}}, wrappers, options, {{.EndpointPackageName}}.Path{{.MethodName}}, make{{.MethodName}}Endpoint, decode{{.MethodName}}Request, encode{{.MethodName}}Response ){{end}}
+	serverFactory( {{.InterfaceNameLcase}}, wrappers, options, {{.EndpointPackageName}}.Path{{.MethodName}}, make{{.MethodName}}Endpoint, decode{{.MethodName}}Request, encode{{.MethodName}}Response ){{end}}
 }
