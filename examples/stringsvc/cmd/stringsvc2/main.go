@@ -47,7 +47,7 @@ func main() {
 			encoding.JSON(1).EncodeResponse()(ctx, w, err)
 		}),
 		}
-		trans.HTTPServersForEndpointsWithOptions(svc, []trans.ServerLayer{}, options)
+		trans.ServersForEndpointsWithOptions(svc, []trans.ServerLayer{}, options)
 		http.ListenAndServe(args.httpPort, nil)
 	case "client":
 		if len(a) < 3 {
@@ -55,7 +55,7 @@ func main() {
 			return
 		}
 
-		client := trans.NewHTTPClient("127.0.0.1" + args.httpPort)
+		client := trans.NewClient("127.0.0.1" + args.httpPort)
 
 		cmd := a[1]
 		arg := a[2]
