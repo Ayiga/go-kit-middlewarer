@@ -26,9 +26,9 @@ import (
 // endpoint.
 type ClientLayer func( addr, path string ) kitendpoint.Middleware
 
-// httpFactory will take a path, encoding function, decoding function, and a
+// clientFactory will take a path, encoding function, decoding function, and a
 // slice of github.com/go-kit/kit/transport/http.ClientOption(s)
-func httpFactory( path string, enc httptransport.EncodeRequestFunc, dec httptransport.DecodeResponseFunc, clientLayers []ClientLayer, options []httptransport.ClientOption ) kitsd.Factory {
+func clientFactory( path string, enc httptransport.EncodeRequestFunc, dec httptransport.DecodeResponseFunc, clientLayers []ClientLayer, options []httptransport.ClientOption ) kitsd.Factory {
 	return func(addr string) (kitendpoint.Endpoint, io.Closer, error) {
 		// first we need to ensure that the address given (addr) is valid.
 		if !strings.HasPrefix(addr, "http") {
@@ -76,7 +76,7 @@ func mapClientLayersToClientOptions( clientLayers []ClientLayer, addr, path stri
 func NewHTTPClient( addr string, {{range .ExtraInterfaces}}{{.Name}} {{.Type}}, {{end}}wrappers ...ClientLayer ) {{.BasePackageName}}.{{.InterfaceName}} {
 	var (
 		{{range .Methods}}
-		{{.MethodNameLcase}}Endpoint, _, _ = httpFactory( {{.EndpointPackageName}}.Path{{.MethodName}}, encode{{.MethodName}}Request, decode{{.MethodName}}Response, wrappers, nil)(addr){{end}}
+		{{.MethodNameLcase}}Endpoint, _, _ = clientFactory( {{.EndpointPackageName}}.Path{{.MethodName}}, encode{{.MethodName}}Request, decode{{.MethodName}}Response, wrappers, nil)(addr){{end}}
 	)
 
 	return &client{{.InterfaceName}} {
@@ -94,7 +94,7 @@ func NewHTTPClient( addr string, {{range .ExtraInterfaces}}{{.Name}} {{.Type}}, 
 func NewHTTPClientWithOptions( addr string, {{range .ExtraInterfaces}}{{.Name}} {{.Type}}, {{end}}wrappers []ClientLayer, options []httptransport.ClientOption ) {{.BasePackageName}}.{{.InterfaceName}} {
 	var (
 		{{range .Methods}}
-		{{.MethodNameLcase}}Endpoint, _, _ = httpFactory( {{.EndpointPackageName}}.Path{{.MethodName}}, encode{{.MethodName}}Request, decode{{.MethodName}}Response, wrappers, options)(addr){{end}}
+		{{.MethodNameLcase}}Endpoint, _, _ = clientFactory( {{.EndpointPackageName}}.Path{{.MethodName}}, encode{{.MethodName}}Request, decode{{.MethodName}}Response, wrappers, options)(addr){{end}}
 	)
 
 	return &client{{.InterfaceName}} {

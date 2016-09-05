@@ -57,7 +57,7 @@ func NewHTTPLoadBalancedClient( get GetLoadBalancerFunc, {{range .ExtraInterface
 	return &client{{.InterfaceName}} {
 		{{range .ExtraInterfaces}}{{.PublicName}}: {{.Name}},
 		{{end}}
-		{{range .Methods}}{{.MethodNameLcase}}Endpoint: endpointFromLoadBalancer(get( httpFactory({{.EndpointPackageName}}.Path{{.MethodName}}, encode{{.MethodName}}Request, decode{{.MethodName}}Response, wrappers, nil))),
+		{{range .Methods}}{{.MethodNameLcase}}Endpoint: endpointFromLoadBalancer(get( clientFactory({{.EndpointPackageName}}.Path{{.MethodName}}, encode{{.MethodName}}Request, decode{{.MethodName}}Response, wrappers, nil))),
 		{{end}}
 	}
 }
@@ -68,7 +68,7 @@ func NewHTTPLoadBalancedClientWithOptions( get GetLoadBalancerFunc, {{range .Ext
 	return &client{{.InterfaceName}} {
 		{{range .ExtraInterfaces}}{{.PublicName}}: {{.Name}},
 		{{end}}
-		{{range .Methods}}{{.MethodNameLcase}}Endpoint: endpointFromLoadBalancer(get( httpFactory({{.EndpointPackageName}}.Path{{.MethodName}}, encode{{.MethodName}}Request, decode{{.MethodName}}Response, wrappers, options))),
+		{{range .Methods}}{{.MethodNameLcase}}Endpoint: endpointFromLoadBalancer(get( clientFactory({{.EndpointPackageName}}.Path{{.MethodName}}, encode{{.MethodName}}Request, decode{{.MethodName}}Response, wrappers, options))),
 		{{end}}
 	}
 }
