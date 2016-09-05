@@ -36,9 +36,13 @@ func serverFactory( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceNam
 
 	middlewares = append( middlewares, config.Middlewares...)
 
-	options := config.Options
+	var options []httptransport.ServerOption
+	if config.ErrorEncoder != nil {
+		options = append(options, httptransport.ServerErrorEncoder(config.ErrorEncoder))
+	}
 	options = append(options, httptransport.ServerBefore(config.RequestFuncs...))
 	options = append(options, httptransport.ServerAfter(config.ServerReponseFuncs...))
+	options = append(options, config.Options...)
 
 	server := httptransport.NewServer(
 			ctx,
