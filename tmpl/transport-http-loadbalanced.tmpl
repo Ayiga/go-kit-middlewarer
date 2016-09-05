@@ -30,7 +30,7 @@ func endpointFromLoadBalancer( lb kitloadbalancer.Balancer ) kitendpoint.Endpoin
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		var ep kitendpoint.Endpoint
 		var err error
-		for i := 0; i < 3; i++ {
+		for i := 0; i < LoadBalancerRetryCount; i++ {
 			ep, err = lb.Endpoint()
 			if err != nil && err != kitloadbalancer.ErrNoEndpoints {
 				continue
