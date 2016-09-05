@@ -53,7 +53,7 @@ type GetLoadBalancerFunc func( kitsd.Factory ) kitloadbalancer.Balancer
 
 // NewHTTPLoadBalancedClient is a function that will return a Load balanced
 // client based on the load balancing conversion function provided.
-func NewHTTPLoadBalancedClient( get GetLoadBalancerFunc, {{range .ExtraInterfaces}}{{.Name}} {{.Type}}, {{end}}wrappers ...HTTPClientLayer ) {{.BasePackageName}}.{{.InterfaceName}} {
+func NewHTTPLoadBalancedClient( get GetLoadBalancerFunc, {{range .ExtraInterfaces}}{{.Name}} {{.Type}}, {{end}}wrappers ...ClientLayer ) {{.BasePackageName}}.{{.InterfaceName}} {
 	return &client{{.InterfaceName}} {
 		{{range .ExtraInterfaces}}{{.PublicName}}: {{.Name}},
 		{{end}}
@@ -64,7 +64,7 @@ func NewHTTPLoadBalancedClient( get GetLoadBalancerFunc, {{range .ExtraInterface
 
 // NewHTTPLoadBalancedClientWithOptions is a function that will return a Load balanced
 // client based on the load balancing conversion function provided.
-func NewHTTPLoadBalancedClientWithOptions( get GetLoadBalancerFunc, {{range .ExtraInterfaces}}{{.Name}} {{.Type}}, {{end}}wrappers []HTTPClientLayer, options []httptransport.ClientOption ) {{.BasePackageName}}.{{.InterfaceName}} {
+func NewHTTPLoadBalancedClientWithOptions( get GetLoadBalancerFunc, {{range .ExtraInterfaces}}{{.Name}} {{.Type}}, {{end}}wrappers []ClientLayer, options []httptransport.ClientOption ) {{.BasePackageName}}.{{.InterfaceName}} {
 	return &client{{.InterfaceName}} {
 		{{range .ExtraInterfaces}}{{.PublicName}}: {{.Name}},
 		{{end}}
