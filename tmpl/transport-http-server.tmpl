@@ -45,18 +45,18 @@ func serverFactory( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceNam
 	)
 }
 
-// HTTPServersForEndpoints will take the given arguments, associate all of
+// ServersForEndpoints will take the given arguments, associate all of
 // the proper endpoints together, and register itself as an HTTP handler for
 // {{.BasePackage}}.{{.InterfaceName}}
-func HTTPServersForEndpoints( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceName}}, wrappers ...ServerLayer ) {
+func ServersForEndpoints( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceName}}, wrappers ...ServerLayer ) {
 	{{range .Methods}}
 	serverFactory( {{.InterfaceNameLcase}}, wrappers, nil, {{.EndpointPackageName}}.Path{{.MethodName}}, make{{.MethodName}}Endpoint, decode{{.MethodName}}Request, encode{{.MethodName}}Response ){{end}}
 }
 
-// HTTPServersForEndpointsWithOptions will take the given arguments, associate all of
+// ServersForEndpointsWithOptions will take the given arguments, associate all of
 // the proper endpoints together, and register itself as an HTTP handler for
 // {{.BasePackage}}.{{.InterfaceName}}
-func HTTPServersForEndpointsWithOptions( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceName}}, wrappers []ServerLayer, options []httptransport.ServerOption ) {
+func ServersForEndpointsWithOptions( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceName}}, wrappers []ServerLayer, options []httptransport.ServerOption ) {
 	{{range .Methods}}
 	serverFactory( {{.InterfaceNameLcase}}, wrappers, options, {{.EndpointPackageName}}.Path{{.MethodName}}, make{{.MethodName}}Endpoint, decode{{.MethodName}}Request, encode{{.MethodName}}Response ){{end}}
 }
