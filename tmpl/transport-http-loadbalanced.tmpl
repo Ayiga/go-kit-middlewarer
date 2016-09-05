@@ -51,24 +51,27 @@ func endpointFromLoadBalancer( lb kitloadbalancer.Balancer ) kitendpoint.Endpoin
 // github.com/go-kit/kit/loadbalancer.LoadBalancer
 type GetLoadBalancerFunc func( kitsd.Factory ) kitloadbalancer.Balancer
 
-// NewHTTPLoadBalancedClient is a function that will return a Load balanced
+// NewLoadBalancedClient is a function that will return a Load balanced
 // client based on the load balancing conversion function provided.
-func NewHTTPLoadBalancedClient( get GetLoadBalancerFunc, {{range .ExtraInterfaces}}{{.Name}} {{.Type}}, {{end}}wrappers ...ClientLayer ) {{.BasePackageName}}.{{.InterfaceName}} {
-	return &client{{.InterfaceName}} {
-		{{range .ExtraInterfaces}}{{.PublicName}}: {{.Name}},
-		{{end}}
-		{{range .Methods}}{{.MethodNameLcase}}Endpoint: endpointFromLoadBalancer(get( clientFactory({{.EndpointPackageName}}.Path{{.MethodName}}, encode{{.MethodName}}Request, decode{{.MethodName}}Response, wrappers, nil))),
-		{{end}}
-	}
+func NewLoadBalancedClient( get GetLoadBalancerFunc, {{range .ExtraInterfaces}}{{.Name}} {{.Type}}, {{end}}wrappers ...ClientLayer ) {{.BasePackageName}}.{{.InterfaceName}} {
+	return NewLoadBalancedClientWithConfig( get, {{range .ExtraInterfaces}}{{.Name}}, {{end}}ClientConfig{ ClientLayers: wrappers})
 }
 
-// NewHTTPLoadBalancedClientWithOptions is a function that will return a Load balanced
+// NewLoadBalancedClientWithOptions is a function that will return a Load balanced
 // client based on the load balancing conversion function provided.
-func NewHTTPLoadBalancedClientWithOptions( get GetLoadBalancerFunc, {{range .ExtraInterfaces}}{{.Name}} {{.Type}}, {{end}}wrappers []ClientLayer, options []httptransport.ClientOption ) {{.BasePackageName}}.{{.InterfaceName}} {
+func NewLoadBalancedClientWithOptions( get GetLoadBalancerFunc, {{range .ExtraInterfaces}}{{.Name}} {{.Type}}, {{end}}wrappers []ClientLayer, options []httptransport.ClientOption ) {{.BasePackageName}}.{{.InterfaceName}} {
+	return NewLoadBalancedClientWithConfig( get, {{range .ExtraInterfaces}}{{.Name}}, {{end}}ClientConfig{ ClientLayers: wrappers, Options: options})
+}
+
+func NewLoadBalancedClientWithConfig(get GetLoadBalancerFunc, {{range .ExtraInterfaces}}{{.Name}} {{.Type}}, {{end}}config ClientConfig)  {{.BasePackageName}}.{{.InterfaceName}} {
+	if config.Method == "" {
+		config.Method = "GET"
+	}
+
 	return &client{{.InterfaceName}} {
 		{{range .ExtraInterfaces}}{{.PublicName}}: {{.Name}},
 		{{end}}
-		{{range .Methods}}{{.MethodNameLcase}}Endpoint: endpointFromLoadBalancer(get( clientFactory({{.EndpointPackageName}}.Path{{.MethodName}}, encode{{.MethodName}}Request, decode{{.MethodName}}Response, wrappers, options))),
+		{{range .Methods}}{{.MethodNameLcase}}Endpoint: endpointFromLoadBalancer(get( clientFactory({{.EndpointPackageName}}.Path{{.MethodName}}, encode{{.MethodName}}Request, decode{{.MethodName}}Response, config))),
 		{{end}}
 	}
 }
