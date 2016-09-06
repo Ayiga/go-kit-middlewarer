@@ -42,7 +42,7 @@ func clientFactory( path string, enc httptransport.EncodeRequestFunc, dec httptr
 		}
 
 		if config.PathPrefix != "" {
-			path = stdlibpath.Join(config.PathPrefix, path)
+			path = stdlibpath.Join("/", config.PathPrefix, path)
 		}
 		
 		p, err := url.Parse(path)
