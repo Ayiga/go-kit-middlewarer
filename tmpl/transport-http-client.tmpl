@@ -95,6 +95,10 @@ func NewClientWithOptions( addr string, {{range .ExtraInterfaces}}{{.Name}} {{.T
 	return NewClientWithConfig(addr,{{range .ExtraInterfaces}}{{.Name}}, {{end}}ClientConfig{ClientLayers: wrappers, Options: options})	
 }
 
+// NewClientWithConfig creates a new {{.InterfaceName}} that will call methods
+// at the given address provided by the addr string. This function takes a
+// ClientConfig that specifies underlying options that will be applied to
+// every Endpoint.
 func NewClientWithConfig( addr string,{{range .ExtraInterfaces}}{{.Name}} {{.Type}}, {{end}}config ClientConfig) {{.BasePackageName}}.{{.InterfaceName}} {
 	if config.Method == "" {
 		config.Method = "GET"

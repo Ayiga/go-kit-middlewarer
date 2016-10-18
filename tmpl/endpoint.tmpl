@@ -18,4 +18,4 @@ const (
 type {{.InterfaceName}}Middleware func({{.BasePackageName}}.{{.InterfaceName}}) {{.BasePackageName}}.{{.InterfaceName}}
 
 {{define "endpoint"}}// Path{{.MethodName}} represents an endpoint path for {{.MethodName}}
-Path{{.MethodName}} = "{{.EndpointPrefix}}/{{.MethodNameLcase}}"{{end}}
+Path{{.MethodName}} = "{{.MethodNameLcase}}"{{end}}

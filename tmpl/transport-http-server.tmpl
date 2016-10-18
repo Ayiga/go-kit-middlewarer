@@ -45,39 +45,45 @@ func serverFactory( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceNam
 	options = append(options, config.Options...)
 
 	server := httptransport.NewServer(
-			ctx,
-			ep.Chain(epID, middlewares...)(endp({{.InterfaceNameLcase}})),
-			dec,
-			enc,
-			options...
-		)
+		ctx,
+		ep.Chain(epID, middlewares...)(endp({{.InterfaceNameLcase}})),
+		dec,
+		enc,
+		options...
+	)
 	config.Mux.Handle(path,server)
 	return server
 }
 
 // ServersForEndpoints will take the given arguments, associate all of
 // the proper endpoints together, and register itself as an HTTP handler for
-// {{.BasePackage}}.{{.InterfaceName}}
-func ServersForEndpoints( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceName}}, wrappers ...ServerLayer )  (servers []*httptransport.Server) {
+// {{.BasePackage}}.{{.InterfaceName}}.
+func ServersForEndpoints( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceName}}, wrappers ...ServerLayer )  (servers map[string]*httptransport.Server) {
 	return ServersForEndpointsWithConfig({{.InterfaceNameLcase}}, ServerConfig{ServerLayers: wrappers})
 }
 
 // ServersForEndpointsWithOptions will take the given arguments, associate all of
 // the proper endpoints together, and register itself as an HTTP handler for
-// {{.BasePackage}}.{{.InterfaceName}}
-func ServersForEndpointsWithOptions( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceName}}, wrappers []ServerLayer, options []httptransport.ServerOption )  (servers []*httptransport.Server) {
+// {{.BasePackage}}.{{.InterfaceName}}.
+func ServersForEndpointsWithOptions( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceName}}, wrappers []ServerLayer, options []httptransport.ServerOption )  (servers map[string]*httptransport.Server) {
 	return ServersForEndpointsWithConfig({{.InterfaceNameLcase}}, ServerConfig{ServerLayers: wrappers, Options: options})	
 }
 
-func ServersForEndpointsWithConfig( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceName}}, config ServerConfig) (servers []*httptransport.Server) {
+// ServersForEndpointsWithConfig will take the given arguments, associate
+// all of the endpoints togher, and register itself as an HTTP handler for
+// {{.BasePackage}}.{{.InterfaceName}}.
+//
+// The function uses the ServerConfig specification to be setup. Any properties
+// can be specified within the ServerConfig structure.
+func ServersForEndpointsWithConfig( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceName}}, config ServerConfig) (servers map[string]*httptransport.Server) {
 	if config.Mux == nil {
 		config.Mux = http.DefaultServeMux
 	}
 
-	{{range .Methods}}
-	servers = append(servers, serverFactory( {{.InterfaceNameLcase}}, config, {{.EndpointPackageName}}.Path{{.MethodName}}, make{{.MethodName}}Endpoint, decode{{.MethodName}}Request, encode{{.MethodName}}Response)){{end}}
-
-	return servers	
+	return map[string]*httptransport.Server{
+		{{range .Methods}}
+		endpoint.Path{{.MethodName}}: serverFactory( {{.InterfaceNameLcase}}, config, {{.EndpointPackageName}}.Path{{.MethodName}}, make{{.MethodName}}Endpoint, decode{{.MethodName}}Request, encode{{.MethodName}}Response),{{end}}
+	}
 }
 
 // Mux represents an interface abstration for a Mux. This is useful when
@@ -137,5 +143,9 @@ type ServerConfig struct {
 
 	// ErrorEncoder allows for you to overwrite the ErrorEncoder.  If nothing
 	// is specified, the Default from go-kit will be used.
+	//
+	// If a different ErrorEncoder is needed for different endpoints, then it
+	// is recommended that the returned Servers be modified with go-kit's 
+	// ServerOptions, externally.
 	ErrorEncoder httptransport.ErrorEncoder
 }
