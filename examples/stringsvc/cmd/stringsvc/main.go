@@ -31,6 +31,6 @@ func main() {
 	l := log.NewLogfmtLogger(os.Stderr)
 	svc = logging.Middleware(l, svc)(svc)
 
-	trans.HTTPServersForEndpoints(svc)
+	trans.ServersForEndpoints(svc)
 	http.ListenAndServe(":9000", nil)
 }
