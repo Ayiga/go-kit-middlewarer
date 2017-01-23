@@ -8,14 +8,10 @@ import (
 	"errors"
 	"reflect"
 	"strings"
-
-	kittransporthttp "github.com/go-kit/kit/transport/http"
 )
 
 func init() {
 	gob.Register(WrapperError{})
-	gob.Register(kittransporthttp.Error{})
-	RegisterError(kittransporthttp.Error{})
 }
 
 type WrapperError struct {
@@ -78,57 +74,6 @@ func (we *WrapperError) UnmarshalJSON(p []byte) error {
 			case getTag("ErrString"):
 				err = dec.Decode(&we.ErrString)
 			case getTag("Err"):
-				if kitErr, ok := we.Err.(*kittransporthttp.Error); ok {
-					func(kitErr *kittransporthttp.Error, dec *json.Decoder) error {
-						for {
-							t, err := dec.Token()
-							if err != nil {
-								return err
-							}
-
-							if delim, ok := t.(json.Delim); ok {
-								switch delim.String() {
-								case "{":
-									continue
-								case "}":
-									return nil
-								default:
-									// unexpected Delim
-									return ErrUnexpectedJSONDelim
-								}
-							}
-
-							if str, ok := t.(string); ok {
-								switch str {
-								case "Domain":
-									err = dec.Decode(&kitErr.Domain)
-								case "Err":
-									var e WrapperError
-									err = dec.Decode(&e)
-									if err != nil {
-										return err
-									}
-
-									kitErr.Err = e.Err.(error)
-								}
-							}
-
-							if err != nil {
-								return err
-							}
-						}
-					}(kitErr, dec)
-
-					// we have kit transport error, special case... need to
-					// multi-layer unwrap...
-
-					// { "Domain": "str", "Err": "WrappedErr" }
-					if we.Err != nil {
-						we.Err = reflect.Indirect(reflect.ValueOf(we.Err)).Interface()
-					}
-					break
-				}
-
 				err = dec.Decode(&we.Err)
 				if we.Err != nil {
 					we.Err = reflect.Indirect(reflect.ValueOf(we.Err)).Interface()
@@ -182,52 +127,6 @@ func (we *WrapperError) UnmarshalXML(d *xml.Decoder, start xml.StartElement) err
 		case getTag("ErrString"):
 			err = d.DecodeElement(&we.ErrString, &startToken)
 		case getTag("Err"):
-			if kitErr, ok := we.Err.(*kittransporthttp.Error); ok {
-				func(kitErr *kittransporthttp.Error, d *xml.Decoder, start xml.StartElement) error {
-					for {
-						t, err := d.Token()
-						if err != nil {
-							return err
-						}
-						if t == start.End() {
-							// we've consumed everything there is
-							return nil
-						}
-
-						startToken, ok := t.(xml.StartElement)
-						if t == nil || !ok {
-							return ErrUnexpectedElementType
-						}
-
-						switch startToken.Name.Local {
-						case "Domain":
-							err = d.DecodeElement(&kitErr.Domain, &startToken)
-						case "Err":
-							var e WrapperError
-							err = d.DecodeElement(&e, &startToken)
-							if err != nil {
-								return err
-							}
-
-							kitErr.Err = e.Err.(error)
-						}
-
-						if err != nil {
-							return err
-						}
-					}
-				}(kitErr, d, startToken)
-
-				// we have kit transport error, special case... need to
-				// multi-layer unwrap...
-
-				// { "Domain": "str", "Err": "WrappedErr" }
-				if we.Err != nil {
-					we.Err = reflect.Indirect(reflect.ValueOf(we.Err)).Interface()
-				}
-				break
-			}
-
 			err = d.DecodeElement(&we.Err, &startToken)
 			if we.Err != nil {
 				we.Err = reflect.Indirect(reflect.ValueOf(we.Err)).Interface()
@@ -250,30 +149,6 @@ func WrapError(e error) *WrapperError {
 		return &WrapperError{
 			Type:      t.String(),
 			ErrString: e.Error(),
-		}
-	}
-
-	// perhaps some further checking to see if it adheres to the encoding
-	// requirements.
-
-	switch v := e.(type) {
-	case kittransporthttp.Error:
-		return &WrapperError{
-			Type:      t.String(),
-			ErrString: e.Error(),
-			Err: kittransporthttp.Error{
-				Domain: v.Domain,
-				Err:    WrapError(v.Err),
-			},
-		}
-	case *kittransporthttp.Error:
-		return &WrapperError{
-			Type:      t.String(),
-			ErrString: e.Error(),
-			Err: kittransporthttp.Error{
-				Domain: v.Domain,
-				Err:    WrapError(v.Err),
-			},
 		}
 	}
 
