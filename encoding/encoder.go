@@ -2,11 +2,10 @@ package encoding
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"io/ioutil"
 	"net/http"
-
-	"golang.org/x/net/context"
 
 	httptransport "github.com/go-kit/kit/transport/http"
 )
@@ -53,7 +52,7 @@ func MakeResponseEncoder(gen GenerateEncoder) httptransport.EncodeResponseFunc {
 // MakeErrorEncoder will take a generic GenerateEncoder function and will
 // return an ErrorEncoder
 func MakeErrorEncoder(gen RequestResponseEncoding) httptransport.ErrorEncoder {
-	return func(ctx context.Context, err error, w http.ResponseWriter ) {
-		gen.EncodeResponse()(ctx,w,err)
+	return func(ctx context.Context, err error, w http.ResponseWriter) {
+		gen.EncodeResponse()(ctx, w, err)
 	}
 }

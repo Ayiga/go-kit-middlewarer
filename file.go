@@ -26,7 +26,7 @@ func (f *File) genImportsAndTypes(node ast.Node) bool {
 	case *ast.ImportSpec:
 		// filter out context.Context, the reason for this is that we'd like to
 		// automatically pass context into the trasnports when they occur.
-		if t.Path.Value == "\"golang.org/x/net/context\"" {
+		if t.Path.Value == "\"context\"" {
 			return false
 		}
 

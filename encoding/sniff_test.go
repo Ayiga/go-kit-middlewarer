@@ -2,10 +2,9 @@ package encoding_test
 
 import (
 	"bytes"
+	"context"
 	"io/ioutil"
 	"net/http"
-
-	"golang.org/x/net/context"
 
 	"github.com/ayiga/go-kit-middlewarer/encoding"
 

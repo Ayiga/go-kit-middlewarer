@@ -1,14 +1,13 @@
 package encoding
 
 import (
+	"context"
 	"errors"
 	"io/ioutil"
 	"mime"
 	"net/http"
 	"strconv"
 	"strings"
-
-	"golang.org/x/net/context"
 
 	httptransport "github.com/go-kit/kit/transport/http"
 )

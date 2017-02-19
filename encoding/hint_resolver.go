@@ -2,12 +2,11 @@ package encoding
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
-
-	"golang.org/x/net/context"
 
 	httptransport "github.com/go-kit/kit/transport/http"
 )
