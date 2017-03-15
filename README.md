@@ -9,7 +9,7 @@ This utility is meant to be used with the ```go generate```.
 ### Usage
 
 To utilize this utility, you first need to **build** or **install** it. The
-easiest way to accomplish this is to run the command.
+easiest way to accomplish this is to run the following command:
 
 ```bash
 go get github.com/ayiga/go-kit-middlewarer && \
@@ -20,7 +20,7 @@ After that's complete, please ensure that go-middle-warer is in your system's
 **PATH** Environment Variable, as it will attempt to be called by
 ```go generate```.
 
-Next, it needs a file / interface to generate the layers for.  An example would
+Next, a file and an interface is needed to generate the layers for.  An example would
 be something like this StringService taken from [go-kit's example String Service](https://github.com/go-kit/kit/tree/master/examples/stringsvc1/main.go)
 
 
@@ -95,7 +95,7 @@ To support these various encodings please see the golang documentation for each:
 
 There are currently no generated binary files, and no default implementation is
 provided for the given interface.  However, with the pieces generated, getting
-up and running should be as simple as:
+up and running should be as simple as writing some minimal logic code:
 
 ```go
 package main
@@ -120,7 +120,7 @@ func (StringService) Count(str string) int {
 func main() {
 	var svc StringService
 
-	trans.HTTPServersForEndpoints(svc)
+	trans.ServersForEndpoints(svc)
 	http.ListenAndServe(":12345", nil)
 }
 ```
