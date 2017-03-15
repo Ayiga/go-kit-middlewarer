@@ -10,19 +10,30 @@ import (
 )
 
 func processLogging(g *Generator, f *File) {
+	fmt.Println("HERE")
 	gopath := os.Getenv("GOPATH")
 
 	var buf bytes.Buffer
 
-	extra, err := template.New("extra").Parse(extras["logging"])
+	tmpl, err := template.New("extra").Parse(extras["logging"])
 	if err != nil {
 		log.Fatalf("Extra Template Parsing Error: %s", err)
 	}
 
+	tmpl = tmpl.New("logging")
+
 	files := []string{
-		filepath.Join(gopath, "src", "github.com", "ayiga", "go-kit-middlewarer", "tmpl", "logging.tmpl"),
+		filepath.Join(
+			gopath,
+			"src",
+			"github.com",
+			"ayiga",
+			"go-kit-middlewarer",
+			"tmpl",
+			"logging.tmpl",
+		),
 	}
-	tmpl, err := extra.ParseFiles(files...)
+	tmpl, err = tmpl.Funcs(templateFuncs).ParseFiles(files...)
 	if err != nil {
 		log.Fatalf("Template Parse Error: %s", err)
 	}

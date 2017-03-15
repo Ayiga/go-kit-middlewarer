@@ -6,16 +6,19 @@
 package logging
 
 import (
+	"context"
 	"time"
 
 	"github.com/go-kit/kit/log"
 
-	{{range .ImportsWithoutTime}}{{template "identity" .}}
+	{{range .Imports}}{{importFilter . "\"time\"" "\"context\""}}
 	{{end}}
-
+	
 	"{{.EndpointPackage}}"
 	{{.BasePackageImport}}
 )
+
+var _ context.Context
 
 type logging{{.InterfaceName}} struct {
 	logger log.Logger

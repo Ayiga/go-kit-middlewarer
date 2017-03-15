@@ -13,7 +13,21 @@ func processEndpoint(g *Generator, f *File) {
 	gopath := os.Getenv("GOPATH")
 	var buf bytes.Buffer
 
-	tmpl, err := template.ParseFiles(filepath.Join(gopath, "src", "github.com", "ayiga", "go-kit-middlewarer", "tmpl", "endpoint.tmpl"))
+	tmpl, err := template.New(
+		"endpoint",
+	).Funcs(
+		templateFuncs,
+	).ParseFiles(
+		filepath.Join(
+			gopath,
+			"src",
+			"github.com",
+			"ayiga",
+			"go-kit-middlewarer",
+			"tmpl",
+			"endpoint.tmpl",
+		),
+	)
 	if err != nil {
 		log.Fatalf("Template Parse Error: %s", err)
 	}
@@ -24,7 +38,7 @@ func processEndpoint(g *Generator, f *File) {
 	basePackage := createImportWithPath(convertedPath)
 
 	for _, interf := range f.interfaces {
-		err := tmpl.Execute(&buf, createTemplateBase(basePackage, endpointPackage, interf, f.imports))
+		err := tmpl.ExecuteTemplate(&buf, "endpoint.tmpl", createTemplateBase(basePackage, endpointPackage, interf, f.imports))
 		if err != nil {
 			log.Fatalf("Template execution failed: %s\n", err)
 		}

@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-kit/kit/endpoint"
 
-	{{range .ImportsWithoutTime}}{{.}}
+	{{range .Imports}}{{importFilter . "\"time\"" "\"context\""}}
 	{{end}}
 	{{range .ExtraImports}}
 	{{.}}{{end}}

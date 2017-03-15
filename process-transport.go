@@ -12,12 +12,26 @@ import (
 func processRequestResponse(gopath string, tb TemplateBase) {
 	var buf bytes.Buffer
 
-	tmpl, err := template.ParseFiles(filepath.Join(gopath, "src", "github.com", "ayiga", "go-kit-middlewarer", "tmpl", "transport-request-response.tmpl"))
+	tmpl, err := template.New(
+		"transport-response-request",
+	).Funcs(
+		templateFuncs,
+	).ParseFiles(
+		filepath.Join(
+			gopath,
+			"src",
+			"github.com",
+			"ayiga",
+			"go-kit-middlewarer",
+			"tmpl",
+			"transport-request-response.tmpl",
+		),
+	)
 	if err != nil {
 		log.Fatalf("Template Parse Error: %s", err)
 	}
 
-	err = tmpl.Execute(&buf, tb)
+	err = tmpl.ExecuteTemplate(&buf, "transport-request-response.tmpl", tb)
 	if err != nil {
 		log.Fatalf("Template execution failed: %s\n", err)
 	}
@@ -33,12 +47,26 @@ func processRequestResponse(gopath string, tb TemplateBase) {
 func processMakeEndpoint(gopath string, tb TemplateBase) {
 	var buf bytes.Buffer
 
-	tmpl, err := template.ParseFiles(filepath.Join(gopath, "src", "github.com", "ayiga", "go-kit-middlewarer", "tmpl", "transport-make-endpoint.tmpl"))
+	tmpl, err := template.New(
+		"transport-make-endpoint",
+	).Funcs(
+		templateFuncs,
+	).ParseFiles(
+		filepath.Join(
+			gopath,
+			"src",
+			"github.com",
+			"ayiga",
+			"go-kit-middlewarer",
+			"tmpl",
+			"transport-make-endpoint.tmpl",
+		),
+	)
 	if err != nil {
 		log.Fatalf("Template Parse Error: %s", err)
 	}
 
-	err = tmpl.Execute(&buf, tb)
+	err = tmpl.ExecuteTemplate(&buf, "transport-make-endpoint.tmpl", tb)
 	if err != nil {
 		log.Fatalf("Template execution failed: %s\n", err)
 	}
@@ -53,12 +81,26 @@ func processMakeEndpoint(gopath string, tb TemplateBase) {
 func processHTTPServer(gopath string, tb TemplateBase) {
 	var buf bytes.Buffer
 
-	tmpl, err := template.ParseFiles(filepath.Join(gopath, "src", "github.com", "ayiga", "go-kit-middlewarer", "tmpl", "transport-http-server.tmpl"))
+	tmpl, err := template.New(
+		"transport-http-server",
+	).Funcs(
+		templateFuncs,
+	).ParseFiles(
+		filepath.Join(
+			gopath,
+			"src",
+			"github.com",
+			"ayiga",
+			"go-kit-middlewarer",
+			"tmpl",
+			"transport-http-server.tmpl",
+		),
+	)
 	if err != nil {
 		log.Fatalf("Template Parse Error: %s", err)
 	}
 
-	err = tmpl.Execute(&buf, tb)
+	err = tmpl.ExecuteTemplate(&buf, "transport-http-server.tmpl", tb)
 	if err != nil {
 		log.Fatalf("Template execution failed: %s\n", err)
 	}
@@ -74,12 +116,26 @@ func processHTTPServer(gopath string, tb TemplateBase) {
 func processTransportClient(gopath string, tb TemplateBase) {
 	var buf bytes.Buffer
 
-	tmpl, err := template.ParseFiles(filepath.Join(gopath, "src", "github.com", "ayiga", "go-kit-middlewarer", "tmpl", "transport-client.tmpl"))
+	tmpl, err := template.New(
+		"transport-client",
+	).Funcs(
+		templateFuncs,
+	).ParseFiles(
+		filepath.Join(
+			gopath,
+			"src",
+			"github.com",
+			"ayiga",
+			"go-kit-middlewarer",
+			"tmpl",
+			"transport-client.tmpl",
+		),
+	)
 	if err != nil {
 		log.Fatalf("Template Parse Error: %s", err)
 	}
 
-	err = tmpl.Execute(&buf, tb)
+	err = tmpl.ExecuteTemplate(&buf, "transport-client.tmpl", tb)
 	if err != nil {
 		log.Fatalf("Template execution failed: %s\n", err)
 	}
@@ -95,12 +151,26 @@ func processTransportClient(gopath string, tb TemplateBase) {
 func processHTTPInstanceClient(gopath string, tb TemplateBase) {
 	var buf bytes.Buffer
 
-	tmpl, err := template.ParseFiles(filepath.Join(gopath, "src", "github.com", "ayiga", "go-kit-middlewarer", "tmpl", "transport-http-client.tmpl"))
+	tmpl, err := template.New(
+		"transport-http-client",
+	).Funcs(
+		templateFuncs,
+	).ParseFiles(
+		filepath.Join(
+			gopath,
+			"src",
+			"github.com",
+			"ayiga",
+			"go-kit-middlewarer",
+			"tmpl",
+			"transport-http-client.tmpl",
+		),
+	)
 	if err != nil {
 		log.Fatalf("Template Parse Error: %s", err)
 	}
 
-	err = tmpl.Execute(&buf, tb)
+	err = tmpl.ExecuteTemplate(&buf, "transport-http-client.tmpl", tb)
 	if err != nil {
 		log.Fatalf("Template execution failed: %s\n", err)
 	}
@@ -116,12 +186,26 @@ func processHTTPInstanceClient(gopath string, tb TemplateBase) {
 func processHTTPLoadBalancedClient(gopath string, tb TemplateBase) {
 	var buf bytes.Buffer
 
-	tmpl, err := template.ParseFiles(filepath.Join(gopath, "src", "github.com", "ayiga", "go-kit-middlewarer", "tmpl", "transport-http-loadbalanced.tmpl"))
+	tmpl, err := template.New(
+		"transport-http-loadbalanced",
+	).Funcs(
+		templateFuncs,
+	).ParseFiles(
+		filepath.Join(
+			gopath,
+			"src",
+			"github.com",
+			"ayiga",
+			"go-kit-middlewarer",
+			"tmpl",
+			"transport-http-loadbalanced.tmpl",
+		),
+	)
 	if err != nil {
 		log.Fatalf("Template Parse Error: %s", err)
 	}
 
-	err = tmpl.Execute(&buf, tb)
+	err = tmpl.ExecuteTemplate(&buf, "transport-http-loadbalanced.tmpl", tb)
 	if err != nil {
 		log.Fatalf("Template execution failed: %s\n", err)
 	}

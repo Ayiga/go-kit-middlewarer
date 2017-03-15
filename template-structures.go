@@ -156,11 +156,10 @@ func createTemplateMethods(basePackage, endpointPackage *Import, interf Interfac
 
 type TemplateBase struct {
 	TemplateCommon
-	Imports            []string
-	ImportsWithoutTime []string
-	ExtraImports       []string
-	Methods            []TemplateMethod
-	ExtraInterfaces    []TemplateParam
+	ExtraImports    []string
+	Imports         []string
+	Methods         []TemplateMethod
+	ExtraInterfaces []TemplateParam
 }
 
 func createTemplateBase(basePackage, endpointPackage *Import, i Interface, oimps []*Import) TemplateBase {
@@ -173,7 +172,6 @@ func createTemplateBase(basePackage, endpointPackage *Import, i Interface, oimps
 	}
 
 	var impSpecs []string
-	var impSpecsWithoutTime []string
 	var extraImpSpecs []string
 	for _, i := range imps {
 		if !i.isParam && i.isEmbeded {
@@ -184,9 +182,6 @@ func createTemplateBase(basePackage, endpointPackage *Import, i Interface, oimps
 
 		if i.isParam {
 			impSpecs = append(impSpecs, i.ImportSpec())
-			if i.path != "time" {
-				impSpecsWithoutTime = append(impSpecsWithoutTime, i.ImportSpec())
-			}
 		}
 	}
 
@@ -217,11 +212,10 @@ func createTemplateBase(basePackage, endpointPackage *Import, i Interface, oimps
 			InterfaceName:       i.name,
 			InterfaceNameLcase:  privateVariableName(i.name),
 		},
-		Imports:            impSpecs,
-		ImportsWithoutTime: impSpecsWithoutTime,
-		ExtraImports:       extraImpSpecs,
-		Methods:            createTemplateMethods(basePackage, endpointPackage, i, i.methods, names),
-		ExtraInterfaces:    extraInterfaces,
+		Imports:         impSpecs,
+		ExtraImports:    extraImpSpecs,
+		Methods:         createTemplateMethods(basePackage, endpointPackage, i, i.methods, names),
+		ExtraInterfaces: extraInterfaces,
 	}
 }
 
