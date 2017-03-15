@@ -5,7 +5,6 @@
 package http
 
 import(
-	"context"
 	"net/http"
 
 	ep "github.com/go-kit/kit/endpoint"
@@ -27,7 +26,6 @@ func epID( ep ep.Endpoint ) ep.Endpoint {
 }
 
 func serverFactory( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceName}}, config ServerConfig, path string, endp toEndpoint, dec httptransport.DecodeRequestFunc, enc httptransport.EncodeResponseFunc) *httptransport.Server {
-	ctx := context.Background()
 	var middlewares []ep.Middleware
 	for _, w := range config.ServerLayers {
 		middlewares = append( middlewares, w( {{.InterfaceNameLcase}}, path ))
@@ -44,7 +42,6 @@ func serverFactory( {{.InterfaceNameLcase}} {{.BasePackageName}}.{{.InterfaceNam
 	options = append(options, config.Options...)
 
 	server := httptransport.NewServer(
-		ctx,
 		ep.Chain(epID, middlewares...)(endp({{.InterfaceNameLcase}})),
 		dec,
 		enc,
