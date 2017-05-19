@@ -35,10 +35,14 @@ type client{{.InterfaceName}} struct {
 func ({{.LocalName}} client{{.InterfaceName}}) {{.MethodName}}({{.MethodArguments}}) ({{.MethodResults}}) {
 	{{if .HasContextParam}}
 	if _, ok := {{.ContextParamName}}.Deadline(); !ok {
-		{{.ContextParamName}}, _ = context.WithTimeout({{.ContextParamName}}, DefaultRequestTimeout)
+		_tmpCtx, _ctxCancelFunc := context.WithTimeout({{.ContextParamName}}, DefaultRequestTimeout)
+		{{.ContextParamName}} = _tmpCtx
+		defer _ctxCancelFunc()
 	}
 	{{else}}
-	{{.ContextParamName}}, _ := context.WithTimeout(context.Background(), DefaultRequestTimeout)
+	{{.ContextParamName}} := context.Background()
+	{{.ContextParamName}}, _ctxCancelFunc := context.WithTimeout({{.ContextParamName}}, DefaultRequestTimeout)
+	defer _ctxCancelFunc() 
 	{{end}}
 
 	_request := {{.MethodNameLcase}}Request{
